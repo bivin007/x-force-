@@ -10,7 +10,7 @@ export class TranscriptManager {
     this.entries = [];
   }
 
-  addEntry({ speaker, text, originalText = null, langName = null, langNative = null, signId = null, emotion = null, emoji = null, confidence = null, time = null }) {
+  addEntry({ speaker, text, originalText = null, langName = null, langNative = null, signId = null, confidence = null, time = null }) {
     const entry = {
       id: `TR_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       speaker: speaker || 'Customer', // 'Customer' | 'Staff' | 'System'
@@ -19,8 +19,6 @@ export class TranscriptManager {
       langName: langName || null,
       langNative: langNative || null,
       signId: signId || null,
-      emotion: emotion || null,
-      emoji: emoji || null,
       confidence: confidence || null,
       timestamp: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       date: new Date().toLocaleDateString()
@@ -69,9 +67,8 @@ export class TranscriptManager {
                   English Source: "${entry.originalText}"
                 </p>
               ` : ''}
-              ${entry.confidence || entry.langNative || entry.emoji || entry.signId ? `
+              ${entry.confidence || entry.langNative || entry.signId ? `
                 <div class="bubble-meta">
-                  ${entry.emoji && entry.emotion ? `<span class="sign-tag emotion-tag" style="background: rgba(244,63,94,0.18); color: #fda4af;">${entry.emoji} ${entry.emotion}</span>` : ''}
                   ${entry.confidence ? `<span class="confidence-tag">Confidence: ${entry.confidence}%</span>` : ''}
                   ${entry.langNative ? `<span class="sign-tag" style="background: rgba(236,72,153,0.2); color: #f472b6;">🌐 ${entry.langNative} (${entry.langName})</span>` : ''}
                   ${entry.signId ? `<span class="sign-tag">Sign: ${entry.signId}</span>` : ''}

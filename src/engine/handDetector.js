@@ -36,7 +36,6 @@ export class HandDetector {
     this.isCameraActive = false;
     this.isVideoFileMode = false;
     this.activeVideoPath = null;
-    this.faceEmotionDetector = null;
 
     // Stream settings & filters
     this.backgroundPreset = VIDEO_PRESETS.REAL_CAMERA;
@@ -187,9 +186,6 @@ export class HandDetector {
       if (this.hands && this.videoElement.readyState >= 2 && !this.videoElement.paused) {
         await this.hands.send({ image: this.videoElement });
       }
-      if (this.faceEmotionDetector && this.videoElement.readyState >= 2 && !this.videoElement.paused) {
-        await this.faceEmotionDetector.processFrame(this.videoElement);
-      }
     } catch (err) {}
 
     const endTime = performance.now();
@@ -214,12 +210,7 @@ export class HandDetector {
     // 1. Draw Background / Video Feed
     this._renderVideoFrame(results.image);
 
-    // 2. Draw Facial Emotion Landmark Mesh
-    if (this.faceEmotionDetector) {
-      this.faceEmotionDetector.drawFacialMesh(this.ctx, width, height, this.isCameraActive);
-    }
-
-    // 3. Draw Hand Landmark Skeleton
+    // 2. Draw Hand Landmark Skeleton
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       results.multiHandLandmarks.forEach((landmarks, index) => {
         const handedness = results.multiHandedness ? results.multiHandedness[index] : null;

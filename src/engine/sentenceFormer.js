@@ -15,13 +15,8 @@ export class SentenceFormer {
     this.onTokensUpdated = null;
     this.autoCommit = true;
     this.commitDebounceTimer = null;
-    this.currentEmotion = null; // { id: 'PAIN', emoji: '😣', ... }
 
     this.grammarRules = this._initGrammarRules();
-  }
-
-  setEmotion(emotionData) {
-    this.currentEmotion = emotionData;
   }
 
   _initGrammarRules() {
@@ -678,16 +673,9 @@ export class SentenceFormer {
       sentence = this._naturalFallback(words);
     }
 
-    // Modulate sentence with active facial emotion (NMM)
-    const emotionInfo = this.currentEmotion || { emotion: 'NEUTRAL', emoji: '😐' };
-    const modulated = this._modulateSentenceWithEmotion(sentence, emotionInfo);
-
     const result = {
       tokens: [...tokenList],
-      sentence: modulated.sentence,
-      plainSentence: sentence,
-      emotion: emotionInfo.emotion || 'NEUTRAL',
-      emoji: emotionInfo.emoji || '😐',
+      sentence: sentence,
       confidence: Math.round(confidence * 100),
       category: category,
       timestamp: new Date().toLocaleTimeString()
@@ -700,65 +688,6 @@ export class SentenceFormer {
     // Reset buffer after successfully generating the sentence
     this.clearTokens();
     return result;
-  }
-
-  _modulateSentenceWithEmotion(baseSentence, emotionInfo) {
-    if (!emotionInfo || !emotionInfo.emotion || emotionInfo.emotion === 'NEUTRAL') {
-      return { sentence: baseSentence };
-    }
-
-    const { emotion, emoji } = emotionInfo;
-    let text = baseSentence;
-
-    if (emotion === 'PAIN') {
-      if (text.toLowerCase().includes('fever')) {
-        text = 'I have a severe fever and I am in intense pain.';
-      } else if (text.toLowerCase().includes('injury')) {
-        text = 'I have a painful injury that urgently requires medical attention.';
-      } else if (text.toLowerCase().includes('doctor')) {
-        text = 'I am in severe pain and need to see a doctor immediately.';
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    if (emotion === 'URGENT') {
-      if (text.toLowerCase().includes('emergency') || text.toLowerCase().includes('help')) {
-        text = 'Critical Emergency! I need immediate urgent assistance!';
-      } else {
-        text = `Priority Alert: ${text}`;
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    if (emotion === 'QUESTION') {
-      if (text.toLowerCase().startsWith('what is') || text.toLowerCase().startsWith('where')) {
-        text = `Excuse me, ${text}`;
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    if (emotion === 'HAPPY') {
-      if (text.toLowerCase().includes('hello') || text.toLowerCase().includes('morning') || text.toLowerCase().includes('afternoon')) {
-        text = `${text} Wishing you a great day!`;
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    if (emotion === 'GRATEFUL') {
-      if (text.toLowerCase().includes('thank you')) {
-        text = 'Thank you so much for your kind and patient help!';
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    if (emotion === 'FATIGUED') {
-      if (text.toLowerCase().includes('waiting')) {
-        text = 'I have been waiting in line for a very long time and I am exhausted.';
-      }
-      return { sentence: `${emoji} ${text}` };
-    }
-
-    return { sentence: `${emoji} ${text}` };
   }
 
   _naturalFallback(words) {
