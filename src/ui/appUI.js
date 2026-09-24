@@ -64,6 +64,13 @@ export function renderAppLayout(rootElement) {
 
         <!-- CONTROLS & THEME TOGGLE -->
         <div class="header-actions">
+          <!-- Judge Demo Cheat Sheet & Gesture Guide -->
+          <button id="btn-open-demo-guide" class="btn-action-guide" title="Open Gesture-to-Word Guide & Scripted Judge Demo Sequences">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>🎯 Demo Guide & Cheat Sheet</span>
+            <span class="guide-badge-pulse">JUDGE DEMO</span>
+          </button>
+
           <!-- Simulation / Demo Button -->
           <button id="btn-run-simulation" class="btn-action-highlight">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -832,6 +839,682 @@ export function renderAppLayout(rootElement) {
 
           </div>
 
+        </div>
+      </div>
+
+      <!-- MODAL 0: INTERACTIVE JUDGE DEMO GUIDE & GESTURE CHEAT SHEET -->
+      <div id="modal-demo-guide" class="modal-backdrop hidden">
+        <div class="modal-dialog-large demo-guide-modal">
+          <div class="modal-dialog-header">
+            <div class="modal-header-title">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="demo-icon-accent"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <div>
+                <h3>🎯 Live Demo Guide & Gesture ➔ Word Cheat Sheet</h3>
+                <p class="modal-header-sub">Master reference for live judge demonstrations, 1-click end-to-end sentence pipelines, and internet-standard gesture poses.</p>
+              </div>
+            </div>
+            <button class="btn-modal-close" data-close="modal-demo-guide">&times;</button>
+          </div>
+
+          <!-- DEMO GUIDE TABS -->
+          <div class="demo-guide-tabs-bar">
+            <button class="demo-tab-btn active" data-guide-tab="sequences">
+              🏆 1-Click Judge Demo Sequences
+            </button>
+            <button class="demo-tab-btn" data-guide-tab="words">
+              📖 Everyday Gesture ➔ Word Cheat Sheet (30+ Signs)
+            </button>
+            <button class="demo-tab-btn" data-guide-tab="alphabet">
+              🔤 ASL Alphabet (A-Z) & Space/Backspace Gestures
+            </button>
+          </div>
+
+          <div class="modal-dialog-body demo-guide-body">
+            <!-- TAB 1: 1-CLICK JUDGE DEMO SEQUENCES -->
+            <div id="guide-tab-sequences" class="guide-tab-panel active">
+              <div class="guide-intro-banner">
+                <div class="guide-intro-icon">⚡</div>
+                <div>
+                  <h4>1-Click Automated Judge Demonstration Runner</h4>
+                  <p>Demonstrates the complete <strong>4-Stage AI Pipeline</strong> (Sign Recognition ➔ Sentence AI ➔ Multilingual Translation ➔ Voice TTS). Clicking any sequence automatically populates tokens, synthesizes natural grammar, translates into the active Indic language (Tamil, Hindi, Telugu, etc.), and reads aloud through Voice TTS.</p>
+                </div>
+              </div>
+
+              <div class="demo-sequences-grid">
+                <!-- Sequence 1: Hospital -->
+                <div class="demo-seq-card" data-seq="hospital">
+                  <div class="seq-card-header">
+                    <span class="seq-tag medical-tag">🏥 Hospital Triage</span>
+                    <span class="seq-badge">5 Tokens</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-token">[I / ME]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[HAVE]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[FEVER]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[NEED]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[DOCTOR]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"I have a fever and need a medical checkup."</p>
+                    <p class="seq-trans">Tamil: <em>"எனக்கு காய்ச்சல் உள்ளது, மருத்துவ பரிசோதனை தேவை."</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="hospital">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run Hospital Demo Sequence
+                  </button>
+                </div>
+
+                <!-- Sequence 2: Bank -->
+                <div class="demo-seq-card" data-seq="bank">
+                  <div class="seq-card-header">
+                    <span class="seq-tag banking-tag">💳 Bank Teller & Deposit</span>
+                    <span class="seq-badge">5 Tokens</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-token">[I / ME]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[WANT]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[DEPOSIT]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[MONEY]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[RECEIPT]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"I want to deposit cash into my account, please provide a deposit receipt."</p>
+                    <p class="seq-trans">Tamil: <em>"நான் பணத்தை டெபாசிட் செய்ய விரும்புகிறேன், ரசீது வழங்கவும்."</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="bank">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run Bank Deposit Demo Sequence
+                  </button>
+                </div>
+
+                <!-- Sequence 3: Civic Water Facilities -->
+                <div class="demo-seq-card" data-seq="civic">
+                  <div class="seq-card-header">
+                    <span class="seq-tag civic-tag">🏛️ Civic Inquiry</span>
+                    <span class="seq-badge">2 Tokens</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-token">[WHERE]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[DRINK_WATER]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"Where is the drinking water facility located?"</p>
+                    <p class="seq-trans">Tamil: <em>"குடிநீர் வசதி எங்கு உள்ளது?"</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="civic">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run Water Facility Demo Sequence
+                  </button>
+                </div>
+
+                <!-- Sequence 4: Live ASL Fingerspelling -->
+                <div class="demo-seq-card" data-seq="fingerspelling">
+                  <div class="seq-card-header">
+                    <span class="seq-tag asl-tag">🔤 ASL Fingerspelling</span>
+                    <span class="seq-badge">5 Letters</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-letter-pill">H</span>
+                    <span class="seq-letter-pill">E</span>
+                    <span class="seq-letter-pill">L</span>
+                    <span class="seq-letter-pill">L</span>
+                    <span class="seq-letter-pill">O</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[HELLO]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"Hello, how can I assist you today?"</p>
+                    <p class="seq-trans">Tamil: <em>"வணக்கம், நான் உங்களுக்கு எப்படி உதவ முடியும்?"</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="fingerspelling">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run ASL Spelling Demo Sequence
+                  </button>
+                </div>
+
+                <!-- Sequence 5: Emergency Triage -->
+                <div class="demo-seq-card" data-seq="emergency">
+                  <div class="seq-card-header">
+                    <span class="seq-tag emergency-tag">🚨 Emergency Alarm</span>
+                    <span class="seq-badge">3 Tokens</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-token emergency-chip">[EMERGENCY]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[PAIN_HURT]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[DOCTOR]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"Emergency assistance needed! I am in severe pain, please call the doctor immediately!"</p>
+                    <p class="seq-trans">Tamil: <em>"அவசர உதவி! எனக்கு கடுமையான வலி உள்ளது, உடனடியாக மருத்துவரை அழைக்கவும்!"</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="emergency">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run Emergency Triage Demo Sequence
+                  </button>
+                </div>
+
+                <!-- Sequence 6: Courtesy & Assistance -->
+                <div class="demo-seq-card" data-seq="courtesy">
+                  <div class="seq-card-header">
+                    <span class="seq-tag courtesy-tag">🙏 Public Assistance</span>
+                    <span class="seq-badge">4 Tokens</span>
+                  </div>
+                  <div class="seq-tokens-flow">
+                    <span class="seq-token">[HELLO]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[PLEASE]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[HELP_ASSIST]</span>
+                    <span class="seq-arrow">➔</span>
+                    <span class="seq-token">[THANK_YOU]</span>
+                  </div>
+                  <div class="seq-output-preview">
+                    <p class="seq-english">"Hello, please help me with this process, thank you."</p>
+                    <p class="seq-trans">Tamil: <em>"வணக்கம், தயவுசெய்து எனக்கு உதவ முடியுமா, மிக்க நன்றி."</em></p>
+                  </div>
+                  <button class="btn-run-seq" data-seq-id="courtesy">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    ▶ Run Courtesy Demo Sequence
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: EVERYDAY GESTURE CHEAT SHEET -->
+            <div id="guide-tab-words" class="guide-tab-panel">
+              <div class="cheat-filter-bar">
+                <input type="text" id="guide-cheat-search" class="cheat-search-input" placeholder="🔍 Search gesture or word (e.g. Fever, Water, Deposit, Where)..." />
+                <div class="cheat-filter-pills">
+                  <button class="cheat-pill active" data-filter="all">All (30+)</button>
+                  <button class="cheat-pill" data-filter="pronouns">Pronouns & Questions</button>
+                  <button class="cheat-pill" data-filter="medical">Medical & Health</button>
+                  <button class="cheat-pill" data-filter="banking">Banking & Civic</button>
+                  <button class="cheat-pill" data-filter="actions">Actions & Needs</button>
+                  <button class="cheat-pill" data-filter="courtesy">Courtesy</button>
+                </div>
+              </div>
+
+              <div class="cheat-cards-grid" id="cheat-cards-grid">
+                <!-- PRONOUNS & QUESTIONS -->
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>I / ME</h4>
+                    <span class="cheat-tag pronouns">Pronoun</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Point index finger directly inward toward your chest.</p>
+                  <div class="cheat-cues">
+                    <span>Index: OPEN</span>
+                    <span>Others: FOLDED</span>
+                    <span>Target: Chest</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="I_ME">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="I_ME">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>YOU</h4>
+                    <span class="cheat-tag pronouns">Pronoun</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Point index finger forward toward the screen/camera.</p>
+                  <div class="cheat-cues">
+                    <span>Index: OPEN</span>
+                    <span>Forward Direction</span>
+                    <span>Single Hand</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="YOU">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="YOU">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>MY / MINE</h4>
+                    <span class="cheat-tag pronouns">Possessive</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Flat open hand placed firmly over center of chest.</p>
+                  <div class="cheat-cues">
+                    <span>All 5: OPEN</span>
+                    <span>Flat Palm</span>
+                    <span>On Chest</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="MY_MINE">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="MY_MINE">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>WHERE</h4>
+                    <span class="cheat-tag pronouns">Question</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Upright index finger wagging side-to-side in inquiry.</p>
+                  <div class="cheat-cues">
+                    <span>Index: OPEN</span>
+                    <span>Side Shake</span>
+                    <span>Inquiry</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="WHERE">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="WHERE">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>WHAT</h4>
+                    <span class="cheat-tag pronouns">Question</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Open upward palms shaking gently side to side.</p>
+                  <div class="cheat-cues">
+                    <span>Palms Up</span>
+                    <span>Horizontal Shake</span>
+                    <span>Question</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="WHAT">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="WHAT">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="pronouns">
+                  <div class="cheat-card-header">
+                    <h4>WHY</h4>
+                    <span class="cheat-tag pronouns">Question</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Touch forehead with flat hand then pull down to Y-hand shape.</p>
+                  <div class="cheat-cues">
+                    <span>Forehead Touch</span>
+                    <span>Y-Shape Pull</span>
+                    <span>Reason</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="WHY">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="WHY">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <!-- ACTIONS & NEEDS -->
+                <div class="cheat-card" data-category="actions">
+                  <div class="cheat-card-header">
+                    <h4>NEED</h4>
+                    <span class="cheat-tag actions">Action / Need</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Hooked index finger (X-hand) pulled downward firmly.</p>
+                  <div class="cheat-cues">
+                    <span>Index: HALF/HOOK</span>
+                    <span>Downward Pull</span>
+                    <span>Requirement</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="NEED">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="NEED">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="actions">
+                  <div class="cheat-card-header">
+                    <h4>WANT</h4>
+                    <span class="cheat-tag actions">Desire</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Clawed hands facing upward pulling back toward body.</p>
+                  <div class="cheat-cues">
+                    <span>Fingers: HALF/CLAW</span>
+                    <span>Inward Pull</span>
+                    <span>Desire</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="WANT">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="WANT">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="actions">
+                  <div class="cheat-card-header">
+                    <h4>HAVE</h4>
+                    <span class="cheat-tag actions">Possession</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Bent flat fingertips resting gently against chest.</p>
+                  <div class="cheat-cues">
+                    <span>Bent Fingers</span>
+                    <span>Touches Chest</span>
+                    <span>Possession</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="HAVE">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="HAVE">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="actions">
+                  <div class="cheat-card-header">
+                    <h4>STOP / HALT</h4>
+                    <span class="cheat-tag actions">Control</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Dominant vertical flat hand chopping down onto flat horizontal palm.</p>
+                  <div class="cheat-cues">
+                    <span>2 Hands</span>
+                    <span>Vertical Chop</span>
+                    <span>Palm Halt</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="STOP">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="STOP">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <!-- MEDICAL & HEALTH -->
+                <div class="cheat-card" data-category="medical">
+                  <div class="cheat-card-header">
+                    <h4>FEVER</h4>
+                    <span class="cheat-tag medical">Medical</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Back of hand placed against forehead feeling temperature.</p>
+                  <div class="cheat-cues">
+                    <span>Forehead Level</span>
+                    <span>Back of Hand</span>
+                    <span>High Temp</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="FEVER">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="FEVER">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="medical">
+                  <div class="cheat-card-header">
+                    <h4>DOCTOR</h4>
+                    <span class="cheat-tag medical">Medical</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Two fingers (index & middle) tapping the pulse on the opposite wrist.</p>
+                  <div class="cheat-cues">
+                    <span>Wrist Pulse Tap</span>
+                    <span>2 Fingers</span>
+                    <span>Physician</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="DOCTOR">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="DOCTOR">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="medical">
+                  <div class="cheat-card-header">
+                    <h4>PAIN / HURT</h4>
+                    <span class="cheat-tag medical">Medical</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Both index fingers pointed toward each other with a twisting motion.</p>
+                  <div class="cheat-cues">
+                    <span>2 Index Fingers</span>
+                    <span>Opposing Twist</span>
+                    <span>Severe Pain</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="PAIN_HURT">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="PAIN_HURT">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="medical">
+                  <div class="cheat-card-header">
+                    <h4>DRINK / WATER</h4>
+                    <span class="cheat-tag medical">Essential</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> C-hand shape held like a cup tilted upward to the lips.</p>
+                  <div class="cheat-cues">
+                    <span>Cup Shape (C)</span>
+                    <span>Tilted to Lips</span>
+                    <span>Water</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="DRINK_WATER">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="DRINK_WATER">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="medical">
+                  <div class="cheat-card-header">
+                    <h4>EAT / FOOD</h4>
+                    <span class="cheat-tag medical">Essential</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Bunched fingertips (flat-O) tapping mouth twice.</p>
+                  <div class="cheat-cues">
+                    <span>Bunched Tips</span>
+                    <span>Touch Lips</span>
+                    <span>Nutrition</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="EAT_FOOD">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="EAT_FOOD">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <!-- BANKING & CIVIC -->
+                <div class="cheat-card" data-category="banking">
+                  <div class="cheat-card-header">
+                    <h4>MONEY / CASH</h4>
+                    <span class="cheat-tag banking">Banking</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Dominant flat-O hand tapping flat horizontal palm repeatedly.</p>
+                  <div class="cheat-cues">
+                    <span>Tapping Flat Palm</span>
+                    <span>2 Hands</span>
+                    <span>Currency</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="MONEY">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="MONEY">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="banking">
+                  <div class="cheat-card-header">
+                    <h4>DEPOSIT</h4>
+                    <span class="cheat-tag banking">Banking</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Hands holding imaginary cash and inserting it forward into a slot.</p>
+                  <div class="cheat-cues">
+                    <span>Push Forward</span>
+                    <span>Insert Motion</span>
+                    <span>Credit Cash</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="DEPOSIT">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="DEPOSIT">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="banking">
+                  <div class="cheat-card-header">
+                    <h4>RECEIPT / FEE</h4>
+                    <span class="cheat-tag banking">Desk</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Two flat hands sliding past each other like holding a printed voucher.</p>
+                  <div class="cheat-cues">
+                    <span>2 Flat Hands</span>
+                    <span>Slide Past</span>
+                    <span>Slip / Invoice</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="RECEIPT_FEE">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="RECEIPT_FEE">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="banking">
+                  <div class="cheat-card-header">
+                    <h4>SIGN FORM</h4>
+                    <span class="cheat-tag banking">Civic</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Dominant hand holds imaginary pen and writes across flat palm.</p>
+                  <div class="cheat-cues">
+                    <span>Pencil Grip</span>
+                    <span>Across Palm</span>
+                    <span>Signature</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="SIGN_FORM">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="SIGN_FORM">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <!-- COURTESY -->
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>HELLO</h4>
+                    <span class="cheat-tag courtesy">Greeting</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Open 5-finger palm waving or salutary gesture from temple.</p>
+                  <div class="cheat-cues">
+                    <span>All 5: OPEN</span>
+                    <span>Wave Motion</span>
+                    <span>Greeting</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="HELLO">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="HELLO">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>THANK YOU</h4>
+                    <span class="cheat-tag courtesy">Courtesy</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Flat open hand touching chin/lips and extending outward toward judge.</p>
+                  <div class="cheat-cues">
+                    <span>Fingers: OPEN</span>
+                    <span>Chin Outward</span>
+                    <span>Gratitude</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="THANK_YOU">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="THANK_YOU">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>PLEASE</h4>
+                    <span class="cheat-tag courtesy">Courtesy</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Open flat hand over chest moving in a gentle clockwise circle.</p>
+                  <div class="cheat-cues">
+                    <span>Flat Hand</span>
+                    <span>Chest Circle</span>
+                    <span>Polite</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="PLEASE">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="PLEASE">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>YES</h4>
+                    <span class="cheat-tag courtesy">Response</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Closed fist nodding up and down from the wrist like a nodding head.</p>
+                  <div class="cheat-cues">
+                    <span>Closed Fist</span>
+                    <span>Up/Down Nod</span>
+                    <span>Affirmative</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="YES">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="YES">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>NO</h4>
+                    <span class="cheat-tag courtesy">Response</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Index & middle fingers extended, snapping down onto the thumb tip.</p>
+                  <div class="cheat-cues">
+                    <span>2 Fingers Open</span>
+                    <span>Snap to Thumb</span>
+                    <span>Negative</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="NO">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="NO">▶ Test in Camera</button>
+                  </div>
+                </div>
+
+                <div class="cheat-card" data-category="courtesy">
+                  <div class="cheat-card-header">
+                    <h4>GOOD / OK</h4>
+                    <span class="cheat-tag courtesy">Response</span>
+                  </div>
+                  <p class="cheat-pose-desc"><strong>Hand Pose:</strong> Thumbs up gesture held steady in camera view.</p>
+                  <div class="cheat-cues">
+                    <span>Thumb: OPEN (Up)</span>
+                    <span>Fingers: FOLDED</span>
+                    <span>Approval</span>
+                  </div>
+                  <div class="cheat-card-actions">
+                    <button class="btn-guide-add-token" data-token="GOOD_OK">+ Add to Studio</button>
+                    <button class="btn-guide-test-pose" data-sign-id="GOOD_OK">▶ Test in Camera</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: ASL ALPHABET (A-Z) & GESTURE SWIPES -->
+            <div id="guide-tab-alphabet" class="guide-tab-panel">
+              <div class="asl-guide-controls-box">
+                <h4>🚀 Real-Time Hand Gesture Controls (No Keyboard Needed)</h4>
+                <div class="asl-gestures-grid">
+                  <div class="control-gesture-card">
+                    <div class="control-card-icon">␣</div>
+                    <div>
+                      <h5>Hand Swipe Right = SPACE</h5>
+                      <p>Sweep open flat hand horizontally from left to right across the camera to insert a word space.</p>
+                    </div>
+                  </div>
+                  <div class="control-gesture-card">
+                    <div class="control-card-icon">⌫</div>
+                    <div>
+                      <h5>Fist Swipe Left = BACKSPACE</h5>
+                      <p>Sweep closed fist horizontally from right to left across the camera to delete the previous letter or word.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="asl-alphabet-chart-wrap">
+                <h4>🔤 Complete ASL Fingerspelling (A to Z) Pose Reference</h4>
+                <div class="asl-alphabet-cards-grid">
+                  ${['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map(char => `
+                    <div class="asl-letter-card" data-letter="${char}">
+                      <div class="asl-letter-big">${char}</div>
+                      <div class="asl-letter-sub">ASL ${char}</div>
+                      <button class="btn-asl-add-letter" data-letter="${char}" title="Add '${char}' to composed word">+ Add</button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 

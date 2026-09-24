@@ -52,6 +52,18 @@ export class SentenceFormer {
     return [
       // --- HEALTH & MEDICAL RULES ---
       {
+        tokens: ['I', 'HAVE', 'FEVER', 'NEED', 'DOCTOR'],
+        sentence: 'I have a fever and need a medical checkup.',
+        confidence: 0.99,
+        category: 'medical'
+      },
+      {
+        tokens: ['I', 'FEVER', 'NEED', 'DOCTOR'],
+        sentence: 'I have a fever and need a medical checkup.',
+        confidence: 0.99,
+        category: 'medical'
+      },
+      {
         tokens: ['I', 'FEVER'],
         sentence: 'I have a fever and need a medical checkup.',
         confidence: 0.98,
@@ -244,6 +256,18 @@ export class SentenceFormer {
         category: 'medical'
       },
       {
+        tokens: ['EMERGENCY', 'PAIN', 'DOCTOR'],
+        sentence: 'Emergency assistance needed! I am in severe pain, please call the doctor immediately!',
+        confidence: 0.99,
+        category: 'medical'
+      },
+      {
+        tokens: ['EMERGENCY', 'PAIN_HURT', 'DOCTOR'],
+        sentence: 'Emergency assistance needed! I am in severe pain, please call the doctor immediately!',
+        confidence: 0.99,
+        category: 'medical'
+      },
+      {
         tokens: ['EMERGENCY'],
         sentence: 'This is an urgent emergency, please help immediately.',
         confidence: 0.99,
@@ -251,6 +275,18 @@ export class SentenceFormer {
       },
 
       // --- FINANCIAL & BANKING RULES ---
+      {
+        tokens: ['I', 'WANT', 'DEPOSIT', 'MONEY', 'RECEIPT'],
+        sentence: 'I want to deposit cash into my account, please provide a deposit receipt.',
+        confidence: 0.99,
+        category: 'financial'
+      },
+      {
+        tokens: ['I', 'DEPOSIT', 'MONEY', 'RECEIPT'],
+        sentence: 'I want to deposit cash into my account, please provide a deposit receipt.',
+        confidence: 0.99,
+        category: 'financial'
+      },
       {
         tokens: ['I', 'WANT', 'DEPOSIT', 'MONEY'],
         sentence: 'I would like to make a cash deposit into my bank account.',
@@ -555,18 +591,48 @@ export class SentenceFormer {
     const tokenList = this.tokenBuffer.map(t => this._normalizeToken(t.token));
     let matchedRule = null;
 
-    // 1. Search for multi-token rules matching the current sequence or suffix
-    for (let len = tokenList.length; len >= 1; len--) {
-      const subTokens = tokenList.slice(-len);
-      const rule = this.grammarRules.find(r => {
-        const normRuleTokens = r.tokens.map(tok => this._normalizeToken(tok));
-        return normRuleTokens.length === subTokens.length &&
-          normRuleTokens.every((tok, idx) => tok === subTokens[idx]);
-      });
+    // 1. First priority: Exact full token match
+    const exactRule = this.grammarRules.find(r => {
+      const normRuleTokens = r.tokens.map(tok => this._normalizeToken(tok));
+      return normRuleTokens.length === tokenList.length &&
+        normRuleTokens.every((tok, idx) => tok === tokenList[idx]);
+    });
 
-      if (rule) {
-        matchedRule = rule;
-        break;
+    if (exactRule) {
+      matchedRule = exactRule;
+    } else {
+      // 2. Second priority: Largest contiguous sub-sequence
+      for (let len = tokenList.length - 1; len >= 2; len--) {
+        for (let start = 0; start <= tokenList.length - len; start++) {
+          const sliceTokens = tokenList.slice(start, start + len);
+          const rule = this.grammarRules.find(r => {
+            const normRuleTokens = r.tokens.map(tok => this._normalizeToken(tok));
+            return normRuleTokens.length === sliceTokens.length &&
+              normRuleTokens.every((tok, idx) => tok === sliceTokens[idx]);
+          });
+          if (rule) {
+            matchedRule = rule;
+            break;
+          }
+        }
+        if (matchedRule) break;
+      }
+
+      // 3. Third priority: Suffix sub-sequence
+      if (!matchedRule) {
+        for (let len = tokenList.length; len >= 1; len--) {
+          const subTokens = tokenList.slice(-len);
+          const rule = this.grammarRules.find(r => {
+            const normRuleTokens = r.tokens.map(tok => this._normalizeToken(tok));
+            return normRuleTokens.length === subTokens.length &&
+              normRuleTokens.every((tok, idx) => tok === subTokens[idx]);
+          });
+
+          if (rule) {
+            matchedRule = rule;
+            break;
+          }
+        }
       }
     }
 

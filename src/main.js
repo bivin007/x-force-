@@ -763,6 +763,10 @@ class App {
     });
 
     // Modals open / close
+    document.getElementById('btn-open-demo-guide')?.addEventListener('click', () => {
+      document.getElementById('modal-demo-guide')?.classList.remove('hidden');
+    });
+
     document.getElementById('btn-open-dict')?.addEventListener('click', () => {
       document.getElementById('modal-dictionary')?.classList.remove('hidden');
     });
@@ -779,6 +783,87 @@ class App {
       btn.addEventListener('click', (e) => {
         const targetId = e.currentTarget.dataset.close;
         document.getElementById(targetId)?.classList.add('hidden');
+      });
+    });
+
+    // Demo Guide Tabs
+    document.querySelectorAll('.demo-tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.demo-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.guide-tab-panel').forEach(p => p.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        const tabId = e.currentTarget.dataset.guideTab;
+        document.getElementById(`guide-tab-${tabId}`)?.classList.add('active');
+      });
+    });
+
+    // 1-Click Judge Demo Sequences Runner
+    document.querySelectorAll('.btn-run-seq').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const seqId = e.currentTarget.dataset.seqId;
+        document.getElementById('modal-demo-guide')?.classList.add('hidden');
+        await this.runJudgeDemoSequence(seqId);
+      });
+    });
+
+    // Cheat Sheet Category Filter Pills
+    document.querySelectorAll('.cheat-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        document.querySelectorAll('.cheat-pill').forEach(p => p.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        const filter = e.currentTarget.dataset.filter;
+        const cards = document.querySelectorAll('.cheat-card');
+        cards.forEach(card => {
+          if (filter === 'all' || card.dataset.category === filter) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Cheat Sheet Live Search Input
+    document.getElementById('guide-cheat-search')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.cheat-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    });
+
+    // Cheat Sheet "+ Add to Studio" buttons
+    document.querySelectorAll('.btn-guide-add-token').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const token = e.currentTarget.dataset.token;
+        if (token) {
+          this.sentenceFormer.addToken(token);
+          this.showGestureToast(`+ Added Token: [${token}]`, '#38bdf8');
+        }
+      });
+    });
+
+    // Cheat Sheet "▶ Test in Camera" buttons
+    document.querySelectorAll('.btn-guide-test-pose').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const signId = e.currentTarget.dataset.signId;
+        if (signId) {
+          this.handDetector.setSimulatedSign(signId);
+          document.getElementById('modal-demo-guide')?.classList.add('hidden');
+          this.showGestureToast(`▶ Testing Pose: [${signId}]`, '#10b981');
+        }
+      });
+    });
+
+    // ASL Alphabet Card Letter Buttons
+    document.querySelectorAll('.btn-asl-add-letter').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const letter = e.currentTarget.dataset.letter;
+        if (letter) {
+          this.appendSpelledLetter(letter);
+          this.showGestureToast(`+ ASL Letter: ${letter}`, '#a855f7');
+        }
       });
     });
 
@@ -1310,6 +1395,76 @@ class App {
     this.highlightPipelineStage(4);
     const { translatedText, langTag } = this.lastTranslatedResult;
     this.tts.speak(translatedText, true, langTag);
+  }
+
+  async runJudgeDemoSequence(seqId) {
+    this.switchView('studio');
+    this.sentenceFormer.clear();
+    this.composedWord = '';
+    this.updateComposerDisplay();
+
+    const sequenceDefinitions = {
+      hospital: {
+        tokens: ['I_ME', 'HAVE', 'FEVER', 'NEED', 'DOCTOR'],
+        title: 'Hospital Triage'
+      },
+      bank: {
+        tokens: ['I_ME', 'WANT', 'DEPOSIT', 'MONEY', 'RECEIPT'],
+        title: 'Bank Cashier Deposit'
+      },
+      civic: {
+        tokens: ['WHERE', 'DRINK_WATER'],
+        title: 'Civic Water Facility'
+      },
+      fingerspelling: {
+        isSpelling: true,
+        letters: ['H', 'E', 'L', 'L', 'O'],
+        token: 'HELLO',
+        title: 'ASL Fingerspelling'
+      },
+      emergency: {
+        tokens: ['EMERGENCY', 'PAIN_HURT', 'DOCTOR'],
+        title: 'Emergency Triage'
+      },
+      courtesy: {
+        tokens: ['HELLO', 'PLEASE', 'HELP_ASSIST', 'THANK_YOU'],
+        title: 'Public Courtesy & Help'
+      }
+    };
+
+    const seq = sequenceDefinitions[seqId] || sequenceDefinitions.hospital;
+    this.showGestureToast(`🎬 Starting Demo: ${seq.title}...`, '#a855f7');
+
+    if (seq.isSpelling) {
+      for (const char of seq.letters) {
+        this.handDetector.setSimulatedSign(`ASL_${char}`);
+        this.appendSpelledLetter(char);
+        this.showGestureToast(`Spelling ASL: "${char}"`, '#38bdf8');
+        await new Promise(r => setTimeout(r, 260));
+      }
+      await new Promise(r => setTimeout(r, 200));
+      this.sentenceFormer.addWord(this.composedWord);
+      this.composedWord = '';
+      this.updateComposerDisplay();
+      await new Promise(r => setTimeout(r, 200));
+      this.sentenceFormer.forceCommit();
+      this.showGestureToast(`✓ "${seq.title}" Synthesized!`, '#10b981');
+      return;
+    }
+
+    // Step through tokens with visual delay
+    for (const token of seq.tokens) {
+      this.handDetector.setSimulatedSign(token);
+      this.sentenceFormer.addToken(token);
+      this.showGestureToast(`+ Token: [${token}]`, '#38bdf8');
+      await new Promise(r => setTimeout(r, 320));
+    }
+
+    await new Promise(r => setTimeout(r, 200));
+    const res = this.sentenceFormer.forceCommit();
+    if (res) {
+      this.showGestureToast(`✓ "${seq.title}" Synthesized & Translated!`, '#10b981');
+    }
   }
 
   updateCustomTrainerProgress(res) {

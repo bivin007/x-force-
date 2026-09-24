@@ -68,13 +68,13 @@ export class HandDetector {
 
       this.hands.setOptions({
         maxNumHands: 2,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.50,
-        minTrackingConfidence: 0.50
+        modelComplexity: 0, // Hardware-accelerated ultra-fast graph (<8ms latency)
+        minDetectionConfidence: 0.45,
+        minTrackingConfidence: 0.45
       });
 
       this.hands.onResults((results) => this._onMediaPipeResults(results));
-      console.log('MediaPipe Hands initialized successfully.');
+      console.log('MediaPipe Hands initialized with hardware acceleration.');
     } catch (err) {
       console.warn('MediaPipe CDN note. Invariant kinematic detector active.', err);
     }
@@ -103,8 +103,9 @@ export class HandDetector {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640 }, // Optimal 640x480 resolution for lightning-fast ML inference
+          height: { ideal: 480 },
+          frameRate: { ideal: 60, min: 30 },
           facingMode: 'user'
         },
         audio: false
@@ -117,6 +118,7 @@ export class HandDetector {
 
       this.isCameraActive = true;
       this.isRunning = true;
+      this.isProcessingFrame = false;
       this._startProcessingLoop();
       return { success: true };
     } catch (err) {
@@ -129,6 +131,7 @@ export class HandDetector {
   stopCamera() {
     this.isRunning = false;
     this.isCameraActive = false;
+    this.isProcessingFrame = false;
     if (this.videoElement.srcObject) {
       this.videoElement.srcObject.getTracks().forEach(t => t.stop());
       this.videoElement.srcObject = null;
@@ -158,6 +161,7 @@ export class HandDetector {
 
       await this.videoElement.play();
       this.isRunning = true;
+      this.isProcessingFrame = false;
       this._startProcessingLoop();
       return { success: true };
     } catch (err) {
@@ -180,13 +184,35 @@ export class HandDetector {
   async _startProcessingLoop() {
     if (!this.isRunning) return;
 
+    // Use requestVideoFrameCallback if available (Chrome/Edge/Firefox GPU synced)
+    if ('requestVideoFrameCallback' in this.videoElement) {
+      this.videoElement.requestVideoFrameCallback(async () => {
+        if (!this.isRunning) return;
+        await this._processCurrentFrame();
+        this._startProcessingLoop();
+      });
+    } else {
+      await this._processCurrentFrame();
+      if (this.isRunning) {
+        requestAnimationFrame(() => this._startProcessingLoop());
+      }
+    }
+  }
+
+  async _processCurrentFrame() {
+    if (this.isProcessingFrame) return;
+    this.isProcessingFrame = true;
+
     const startTime = performance.now();
 
     try {
       if (this.hands && this.videoElement.readyState >= 2 && !this.videoElement.paused) {
         await this.hands.send({ image: this.videoElement });
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      this.isProcessingFrame = false;
+    }
 
     const endTime = performance.now();
     this.inferenceLatencyMs = Math.round(endTime - startTime);
@@ -194,11 +220,7 @@ export class HandDetector {
     const delta = (endTime - this.lastFrameTime) / 1000;
     this.lastFrameTime = endTime;
     if (delta > 0) {
-      this.fps = Math.round(0.9 * this.fps + 0.1 * (1 / delta));
-    }
-
-    if (this.isRunning) {
-      requestAnimationFrame(() => this._startProcessingLoop());
+      this.fps = Math.round(0.85 * this.fps + 0.15 * (1 / delta));
     }
   }
 

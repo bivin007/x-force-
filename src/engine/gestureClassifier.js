@@ -17,8 +17,8 @@ export class GestureClassifier {
     this.bufferSize = 5;
     this.lastCommittedSign = null;
     this.lastCommitTime = 0;
-    this.commitCooldownMs = 900; // Time before same sign can re-trigger TTS
-    this.confidenceThreshold = 0.55;
+    this.commitCooldownMs = 240; // Low cooldown for rapid real-time gesture & letter commitments
+    this.confidenceThreshold = 0.48;
     this.recognitionMode = 'HYBRID'; // 'HYBRID' | 'ASL_ALPHABET' | 'GESTURES'
   }
 
