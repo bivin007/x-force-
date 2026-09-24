@@ -11,6 +11,7 @@ import { FeatureExtractor } from './engine/featureExtractor.js';
 import { GestureClassifier } from './engine/gestureClassifier.js';
 import { SentenceFormer } from './engine/sentenceFormer.js';
 import { TranslatorEngine, SUPPORTED_LANGUAGES } from './engine/translatorEngine.js';
+import { FaceEmotionDetector, EMOTIONS } from './engine/faceEmotionDetector.js';
 import { CustomTrainer } from './engine/customTrainer.js';
 import { TTSEngine } from './audio/ttsEngine.js';
 import { STTEngine } from './audio/sttEngine.js';
@@ -34,6 +35,9 @@ class App {
     this.sentenceFormer = new SentenceFormer();
     this.translator = new TranslatorEngine();
     this.tts = new TTSEngine();
+    this.faceEmotionDetector = new FaceEmotionDetector({
+      onEmotionChange: (state) => this.onEmotionUpdated(state)
+    });
 
     // DOM Elements
     this.videoEl = document.getElementById('webcam-video');
@@ -65,6 +69,7 @@ class App {
       this.canvasEl,
       (results) => this.onVisionResults(results)
     );
+    this.handDetector.faceEmotionDetector = this.faceEmotionDetector;
 
     this.stressLab = new StressTestLab(
       this.handDetector,
@@ -106,6 +111,7 @@ class App {
 
     // Initial default translation sync
     this.updateTranslationUI(this.lastFormedSentence, false);
+    this.onEmotionUpdated(this.faceEmotionDetector.getState());
 
     this.tts.onStateChange = ({ isSpeaking }) => {
       if (isSpeaking) {
@@ -119,6 +125,96 @@ class App {
       this.handDetector.startSimulatedMode('HELLO');
       this.updateHudMetrics(18, 30, 1);
     }, 400);
+  }
+
+  onEmotionUpdated(state) {
+    if (!state) return;
+
+    // 1. Update Floating Video HUD Badge
+    const hudBadge = document.getElementById('hud-face-emoji-badge');
+    const hudEmoji = document.getElementById('hud-main-emoji');
+    const hudTitle = document.getElementById('hud-emotion-title');
+    const hudConf = document.getElementById('hud-emotion-conf');
+    const hudDesc = document.getElementById('hud-emotion-desc');
+    const auBrow = document.getElementById('au-pill-brow');
+    const auSmile = document.getElementById('au-pill-smile');
+    const auEyes = document.getElementById('au-pill-eyes');
+
+    if (hudEmoji) hudEmoji.textContent = state.emoji;
+    if (hudTitle) hudTitle.textContent = `${state.name}`;
+    if (hudConf) hudConf.textContent = `${state.confidence}%`;
+    if (hudDesc) hudDesc.textContent = state.description;
+
+    if (auBrow) {
+      auBrow.textContent = state.actionUnits.browFurrow > 0.4 ? 'Brows: Furrowed' : (state.actionUnits.browRaise > 0.4 ? 'Brows: Raised' : 'Brows: Normal');
+    }
+    if (auSmile) {
+      auSmile.textContent = `Smile: ${Math.round(state.actionUnits.smileCurvature * 100)}%`;
+    }
+    if (auEyes) {
+      auEyes.textContent = state.actionUnits.eyeAperture > 0.65 ? 'Eyes: Alert' : (state.actionUnits.eyeAperture < 0.35 ? 'Eyes: Squint' : 'Eyes: Open');
+    }
+
+    // Update Theme CSS on HUD badge
+    if (hudBadge) {
+      hudBadge.className = 'hud-face-emoji-badge';
+      if (state.emotion === 'PAIN') hudBadge.classList.add('emotion-pain');
+      else if (state.emotion === 'URGENT') hudBadge.classList.add('emotion-urgent');
+      else if (state.emotion === 'HAPPY') hudBadge.classList.add('emotion-happy');
+      else if (state.emotion === 'QUESTION') hudBadge.classList.add('emotion-question');
+      else if (state.emotion === 'GRATEFUL') hudBadge.classList.add('emotion-grateful');
+      else if (state.emotion === 'FATIGUED') hudBadge.classList.add('emotion-fatigued');
+    }
+
+    // 2. Update Recognition Card Telemetry
+    const cardEl = document.getElementById('facial-emotion-telemetry-card');
+    const recogEmoji = document.getElementById('recog-big-emoji');
+    const recogName = document.getElementById('recog-emotion-name');
+    const recogDesc = document.getElementById('recog-emotion-desc');
+    const recogSentiment = document.getElementById('recog-sentiment-tag');
+
+    const auBarBrow = document.getElementById('au-bar-brow');
+    const auBarSmile = document.getElementById('au-bar-smile');
+    const auBarEyes = document.getElementById('au-bar-eyes');
+    const auValBrow = document.getElementById('au-val-brow');
+    const auValSmile = document.getElementById('au-val-smile');
+    const auValEyes = document.getElementById('au-val-eyes');
+
+    if (recogEmoji) recogEmoji.textContent = state.emoji;
+    if (recogName) recogName.textContent = `${state.name} (${state.confidence}%)`;
+    if (recogDesc) recogDesc.textContent = state.description;
+    if (recogSentiment) {
+      recogSentiment.textContent = state.isManual ? `Manual Override (${state.tone})` : `NMM ${state.tone.toUpperCase()}`;
+    }
+
+    if (auBarBrow && auValBrow) {
+      const bPct = Math.round(state.actionUnits.browFurrow * 100);
+      auBarBrow.style.width = `${bPct}%`;
+      auValBrow.textContent = state.actionUnits.browFurrow.toFixed(2);
+    }
+    if (auBarSmile && auValSmile) {
+      const sPct = Math.round(Math.max(0, (state.actionUnits.smileCurvature + 0.5) * 100));
+      auBarSmile.style.width = `${sPct}%`;
+      auValSmile.textContent = state.actionUnits.smileCurvature.toFixed(2);
+    }
+    if (auBarEyes && auValEyes) {
+      const ePct = Math.round(state.actionUnits.eyeAperture * 100);
+      auBarEyes.style.width = `${ePct}%`;
+      auValEyes.textContent = state.actionUnits.eyeAperture.toFixed(2);
+    }
+
+    if (cardEl) {
+      cardEl.className = 'facial-emotion-telemetry-card';
+      if (state.emotion === 'PAIN') cardEl.classList.add('emotion-pain');
+      else if (state.emotion === 'URGENT') cardEl.classList.add('emotion-urgent');
+      else if (state.emotion === 'HAPPY') cardEl.classList.add('emotion-happy');
+      else if (state.emotion === 'QUESTION') cardEl.classList.add('emotion-question');
+      else if (state.emotion === 'GRATEFUL') cardEl.classList.add('emotion-grateful');
+      else if (state.emotion === 'FATIGUED') cardEl.classList.add('emotion-fatigued');
+    }
+
+    // Pass active emotion to SentenceFormer
+    this.sentenceFormer.setEmotion(state);
   }
 
   /**
@@ -156,6 +252,9 @@ class App {
     // If stable and confident
     if (classification.isStable && classification.bestMatch && classification.confidence >= 65) {
       const sign = classification.bestMatch;
+      
+      // Auto sync Non-Manual Marker facial expression with recognized gesture
+      this.faceEmotionDetector.syncWithSignContext(sign.id);
       const isLetter = sign.category === 'asl_alphabet' || Boolean(sign.letter);
 
       if (isLetter) {
@@ -305,6 +404,7 @@ class App {
   onSimulationStep(step) {
     if (step.sender === 'customer') {
       this.handDetector.setSimulatedSign(step.signId);
+      this.faceEmotionDetector.syncWithSignContext(step.signId);
       const signInfo = VOCABULARY.find(v => v.id === step.signId);
 
       this.tts.speak(step.text, true);
@@ -313,6 +413,8 @@ class App {
         speaker: 'Customer',
         text: step.text,
         signId: signInfo ? signInfo.name : step.signId,
+        emotion: this.faceEmotionDetector.currentEmotion.name,
+        emoji: this.faceEmotionDetector.currentEmotion.emoji,
         confidence: 96
       });
     } else {
@@ -341,6 +443,7 @@ class App {
     const sign = VOCABULARY.find(v => v.id === signId || v.videoPath === videoPath);
     const targetSignId = sign ? sign.id : (signId || 'HELLO');
     this.activeStreamSignId = targetSignId;
+    this.faceEmotionDetector.syncWithSignContext(targetSignId);
 
     const select = document.getElementById('select-dataset-video');
     if (select && videoPath) {
@@ -560,13 +663,17 @@ class App {
       });
     }
 
-    // Environment & Lighting Selectors
+    // Environment, Lighting & Facial Emotion Selectors
     document.getElementById('select-bg-preset')?.addEventListener('change', (e) => {
       this.handDetector.setBackgroundPreset(e.target.value);
     });
 
     document.getElementById('select-light-preset')?.addEventListener('change', (e) => {
       this.handDetector.setLightingMode(e.target.value);
+    });
+
+    document.getElementById('select-emotion-override')?.addEventListener('change', (e) => {
+      this.faceEmotionDetector.setManualOverride(e.target.value);
     });
 
     // Scenario buttons
@@ -830,7 +937,7 @@ class App {
   }
 
   handleSentenceFormed(result) {
-    const { sentence, confidence, category } = result;
+    const { sentence, confidence, category, emoji, emotion } = result;
     this.lastFormedSentence = sentence;
 
     this.highlightPipelineStage(2);
@@ -839,7 +946,7 @@ class App {
     const badgeEl = document.getElementById('grammar-confidence-badge');
     if (sentenceEl) sentenceEl.textContent = `"${sentence}"`;
     if (badgeEl) {
-      badgeEl.textContent = `${Math.round(confidence * 100)}% Match (${category ? category.toUpperCase() : 'GRAMMAR'})`;
+      badgeEl.textContent = `${Math.round(confidence)}% Match (${category ? category.toUpperCase() : 'GRAMMAR'} • ${emoji || '😐'} ${emotion || 'NEUTRAL'})`;
     }
 
     // Pass formed English sentence to Stage 3 Multilingual Translation
@@ -874,7 +981,8 @@ class App {
       this.speakTranslatedSentence();
     }
 
-    // Log to Dialogue Transcript
+    // Log to Dialogue Transcript with active facial emotion & emoji
+    const activeEmotion = this.faceEmotionDetector.getState();
     this.transcript.addEntry({
       speaker: 'Customer',
       text: translated.translatedText,
@@ -882,6 +990,8 @@ class App {
       langName: targetLang.name,
       langNative: targetLang.native,
       signId: '4-Stage Pipeline',
+      emotion: activeEmotion.name,
+      emoji: activeEmotion.emoji,
       confidence: 96
     });
     const countEl = document.getElementById('transcript-count');

@@ -40,6 +40,16 @@ export class TranslatorEngine {
   translate(text, targetLang = null) {
     if (!text) return { translatedText: '', langCode: 'en', langName: 'English' };
     const lang = targetLang || this.currentLanguage;
+
+    // Detect emoji prefix if present (e.g. '😣 ', '🚨 ', '😊 ')
+    let emojiPrefix = '';
+    let bodyText = text.trim();
+    const emojiMatch = bodyText.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF]|[\uD83C-\uD83E][\uDD00-\uDFFF]|\p{Emoji})\s*/u);
+    if (emojiMatch) {
+      emojiPrefix = emojiMatch[0];
+      bodyText = bodyText.substring(emojiMatch[0].length).trim();
+    }
+
     if (lang === 'en') {
       return {
         originalText: text,
@@ -51,43 +61,38 @@ export class TranslatorEngine {
       };
     }
 
-    const clean = text.trim();
+    const clean = bodyText;
+    let translated = '';
     
     // 1. Direct phrase lookup in dictionary
     if (this.dictionary[clean] && this.dictionary[clean][lang]) {
-      const match = this.dictionary[clean][lang];
-      return {
-        originalText: text,
-        translatedText: match,
-        langCode: lang,
-        langName: this.getLangName(lang),
-        nativeName: this.getNativeName(lang),
-        langTag: this.getLangTag(lang)
-      };
-    }
-
-    // 2. Fuzzy / lower case lookup
-    const lowerKey = clean.toLowerCase();
-    for (const [k, translations] of Object.entries(this.dictionary)) {
-      if (k.toLowerCase() === lowerKey || k.toLowerCase().includes(lowerKey) || lowerKey.includes(k.toLowerCase())) {
-        if (translations[lang]) {
-          return {
-            originalText: text,
-            translatedText: translations[lang],
-            langCode: lang,
-            langName: this.getLangName(lang),
-            nativeName: this.getNativeName(lang),
-            langTag: this.getLangTag(lang)
-          };
+      translated = this.dictionary[clean][lang];
+    } else {
+      // 2. Fuzzy / lower case lookup
+      const lowerKey = clean.toLowerCase();
+      let foundMatch = null;
+      for (const [k, translations] of Object.entries(this.dictionary)) {
+        if (k.toLowerCase() === lowerKey || k.toLowerCase().includes(lowerKey) || lowerKey.includes(k.toLowerCase())) {
+          if (translations[lang]) {
+            foundMatch = translations[lang];
+            break;
+          }
         }
+      }
+
+      if (foundMatch) {
+        translated = foundMatch;
+      } else {
+        // 3. Fallback: Word-by-word contextual replacement
+        translated = this._wordByWordTranslate(clean, lang);
       }
     }
 
-    // 3. Fallback: Word-by-word contextual replacement
-    const translated = this._wordByWordTranslate(clean, lang);
+    const finalOutput = emojiPrefix ? `${emojiPrefix}${translated}` : translated;
+
     return {
       originalText: text,
-      translatedText: translated,
+      translatedText: finalOutput,
       langCode: lang,
       langName: this.getLangName(lang),
       nativeName: this.getNativeName(lang),
@@ -113,6 +118,34 @@ export class TranslatorEngine {
   _buildMultilingualDictionary() {
     return {
       // --- Medical & Health Sentences ---
+      'I have a severe fever and I am in intense pain.': {
+        ta: 'எனக்கு அதிக காய்ச்சல் மற்றும் கடுமையான வலி உள்ளது.',
+        hi: 'मुझे तेज बुखार है और बहुत तीव्र दर्द हो रहा है।',
+        te: 'నాకు తీవ్రమైన జ్వరం మరియు అధిక నొప్పి ఉంది.',
+        kn: 'ನನಗೆ ತೀವ್ರ ಜ್ವರ ಮತ್ತು ಅತಿಯಾದ ನೋವು ಇದೆ.',
+        ml: 'എനിക്ക് കടുത്ത പനിയും കഠിനമായ വേദനയുമുണ്ട്.'
+      },
+      'I have a painful injury that urgently requires medical attention.': {
+        ta: 'எனக்கு கடுமையான காயம் ஏற்பட்டுள்ளது, அவசர சிகிச்சை தேவை.',
+        hi: 'मुझे दर्दनाक चोट लगी है, तुरंत डॉक्टर की मदद चाहिए।',
+        te: 'నాకు తీవ్రమైన గాయమైంది, తక్షణ వైద్య సహాయం కావాలి.',
+        kn: 'ನನಗೆ ನೋವಿನ ಗಾಯವಾಗಿದೆ, ತುರ್ತು ಚಿಕಿತ್ಸೆ ಬೇಕಾಗಿದೆ.',
+        ml: 'എനിക്ക് വേദനയേറിയ പരിക്കേറ്റിട്ടുണ്ട്, അടിയന്തര ചികിത്സ ആവശ്യമാണ്.'
+      },
+      'Critical Emergency! I need immediate urgent assistance!': {
+        ta: 'அவசர நிலைமை! உடனடியாக உதவி தேவைப்படுகிறது!',
+        hi: 'अति आवश्यक आपातकाल! कृपया तुरंत मदद करें!',
+        te: 'అత్యవసర పరిస్థితి! దయచేసి వెంటనే సహాయం చేయండి!',
+        kn: 'ತುರ್ತು ಪರಿಸ್ಥಿತಿ! ದಯವಿಟ್ಟು ತಕ್ಷಣವೇ ಸಹಾಯ ಮಾಡಿ!',
+        ml: 'അടിയന്തരാവസ്ഥ! ദയവായി ഉടൻ സഹായിക്കുക!'
+      },
+      'Thank you so much for your kind and patient help!': {
+        ta: 'உங்கள் கனிவான மற்றும் பொறுமையான உதவிக்கு மிக்க நன்றி!',
+        hi: 'आपकी दयालु और धैर्यपूर्ण मदद के लिए बहुत-बहुत धन्यवाद!',
+        te: 'మీ దయతో కూడిన సహాయానికి చాలా ధన్యవాదాలు!',
+        kn: 'ನಿಮ್ಮ ತಾಳ್ಮೆಯ ಸಹಾಯಕ್ಕಾಗಿ ತುಂಬಾ ಧನ್ಯವಾದಗಳು!',
+        ml: 'നിങ്ങളുടെ ദയയുള്ള സഹായത്തിന് വളരെ നന്ദി!'
+      },
       'I have a fever and need a medical checkup.': {
         ta: 'எனக்கு காய்ச்சல் உள்ளது, மருத்துவ பரிசோதனை தேவைப்படுகிறது.',
         hi: 'मुझे बुखार है और मेडिकल जांच की आवश्यकता है।',

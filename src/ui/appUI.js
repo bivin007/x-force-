@@ -211,7 +211,27 @@ export function renderAppLayout(rootElement) {
                 </div>
               </div>
 
-              <!-- Quick Background & Lighting Bar -->
+              <!-- Floating Live Facial Expression & Emoji Badge -->
+              <div class="hud-face-emoji-badge" id="hud-face-emoji-badge">
+                <div class="emoji-avatar-bubble" id="hud-emoji-bubble">
+                  <span class="hud-main-emoji" id="hud-main-emoji">😐</span>
+                  <span class="hud-emoji-halo" id="hud-emoji-halo"></span>
+                </div>
+                <div class="hud-emotion-meta">
+                  <div class="hud-emotion-row">
+                    <span class="hud-emotion-title" id="hud-emotion-title">NEUTRAL / CALM</span>
+                    <span class="hud-emotion-conf" id="hud-emotion-conf">95%</span>
+                  </div>
+                  <span class="hud-emotion-desc" id="hud-emotion-desc">Non-Manual Marker (NMM)</span>
+                  <div class="hud-emotion-gauges">
+                    <span class="au-pill" id="au-pill-brow">Brows: Normal</span>
+                    <span class="au-pill" id="au-pill-smile">Smile: 0%</span>
+                    <span class="au-pill" id="au-pill-eyes">Eyes: Open</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Background, Lighting & Emotion Selector Bar -->
               <div class="hud-bottom-bar">
                 <div class="filter-pill-selector">
                   <span class="filter-title">Environment:</span>
@@ -230,6 +250,17 @@ export function renderAppLayout(rootElement) {
                     <option value="high_contrast">High Contrast Filter</option>
                     <option value="overexposed">Backlight / Glare</option>
                     <option value="edge_boost">Edge Enhancement</option>
+                  </select>
+
+                  <select id="select-emotion-override" class="hud-select emotion-select" aria-label="Select Facial Expression Mode or Simulator">
+                    <option value="AUTO">🤖 Face Emotion: Auto-Sync</option>
+                    <option value="HAPPY">😊 Happy / Polite (Greeting)</option>
+                    <option value="PAIN">😣 Pain / Distress (Medical)</option>
+                    <option value="URGENT">🚨 Urgent / Alert (Emergency)</option>
+                    <option value="QUESTION">🤨 Questioning / Inquiry (Grammar)</option>
+                    <option value="GRATEFUL">🙏 Grateful / Thankful (Courtesies)</option>
+                    <option value="FATIGUED">😞 Fatigued / Waiting (Queue)</option>
+                    <option value="NEUTRAL">😐 Neutral / Attentive</option>
                   </select>
                 </div>
               </div>
@@ -307,6 +338,40 @@ export function renderAppLayout(rootElement) {
               <h3 class="translated-spoken-text" id="active-spoken-text">
                 "Hold hand in view or click Play Video Stream from dataset."
               </h3>
+            </div>
+
+            <!-- FACIAL EXPRESSION & EMOJI NON-MANUAL MARKER CARD -->
+            <div class="facial-emotion-telemetry-card" id="facial-emotion-telemetry-card">
+              <div class="emotion-card-left">
+                <div class="big-emoji-display" id="recog-big-emoji">😐</div>
+                <div class="emotion-text-wrap">
+                  <div class="emotion-title-line">
+                    <span class="emotion-badge-label">FACIAL EXPRESSION (NMM)</span>
+                    <span class="emotion-sentiment-tag" id="recog-sentiment-tag">Baseline Calm</span>
+                  </div>
+                  <h4 class="emotion-active-name" id="recog-emotion-name">Neutral / Attentive (95%)</h4>
+                  <p class="emotion-active-desc" id="recog-emotion-desc">Natural baseline facial expression</p>
+                </div>
+              </div>
+
+              <!-- Action Units Mini Bars -->
+              <div class="emotion-au-bars-wrap">
+                <div class="au-metric-row">
+                  <span class="au-name">Brow Tension:</span>
+                  <div class="au-bar-bg"><div class="au-bar-fill" id="au-bar-brow" style="width: 10%;"></div></div>
+                  <span class="au-val" id="au-val-brow">0.10</span>
+                </div>
+                <div class="au-metric-row">
+                  <span class="au-name">Smile / Lip:</span>
+                  <div class="au-bar-bg"><div class="au-bar-fill" id="au-bar-smile" style="width: 50%;"></div></div>
+                  <span class="au-val" id="au-val-smile">0.00</span>
+                </div>
+                <div class="au-metric-row">
+                  <span class="au-name">Eye EAR:</span>
+                  <div class="au-bar-bg"><div class="au-bar-fill" id="au-bar-eyes" style="width: 50%;"></div></div>
+                  <span class="au-val" id="au-val-eyes">0.50</span>
+                </div>
+              </div>
             </div>
 
             <!-- TOP-3 PREDICTIONS & FINGER HUD -->
