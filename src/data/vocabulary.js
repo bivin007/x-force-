@@ -415,6 +415,36 @@ const BASE_VOCABULARY = [
     keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
     scenarioKeywords: ['z', 'letter z']
   },
+  {
+    id: 'SPACE',
+    name: 'Space (Hand Gesture)',
+    letter: '␣',
+    category: 'asl_alphabet',
+    spokenText: 'Space',
+    description: 'Swipe hand to the right or hold a flat open hand pointing horizontally to the right to add a space between words.',
+    counterResponse: 'Space added.',
+    serviceContext: 'Fingerspelling word separation and text composition',
+    handsRequired: 1,
+    motionType: 'swipe_right',
+    visualGuide: 'Swipe flat open hand to the right or hold palm facing right.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['space', 'blank', 'gap', 'word space', 'spacebar']
+  },
+  {
+    id: 'BACKSPACE',
+    name: 'Backspace / Delete (Hand Gesture)',
+    letter: '⌫',
+    category: 'asl_alphabet',
+    spokenText: 'Backspace',
+    description: 'Swipe hand to the left or extend thumb to the left (thumbs-left / index-left) to delete the last fingerspelled letter.',
+    counterResponse: 'Letter deleted.',
+    serviceContext: 'Editing and correcting fingerspelled words and sign tokens',
+    handsRequired: 1,
+    motionType: 'swipe_left',
+    visualGuide: 'Swipe hand to the left or make a fist with thumb extended to the left.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['backspace', 'delete', 'undo', 'erase', 'remove', 'clear letter']
+  },
 
   // =========================================================================
   // 2. PUBLIC SERVICE & CONVERSATIONAL GESTURE VOCABULARY

@@ -286,12 +286,18 @@ export class FeatureExtractor {
     const isNodding = yReversals >= 2;
     const isStationary = speed < 0.04 && xReversals < 2 && yReversals < 2;
 
+    // Horizontal swipe gesture kinematics (Space: Rightward swipe, Backspace: Leftward swipe)
+    const isSwipingRight = totalDx > 0.035 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && xReversals <= 1 && speed > 0.05;
+    const isSwipingLeft = totalDx < -0.035 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && xReversals <= 1 && speed > 0.05;
+
     return {
       velocity: { x: totalDx / dt, y: totalDy / dt, speed },
       isWaving,
       isNodding,
       isShaking,
       isStationary,
+      isSwipingRight,
+      isSwipingLeft,
       xReversals,
       yReversals,
       motionTrajectory: history.map(h => ({ x: h.palmCenter.x, y: h.palmCenter.y }))

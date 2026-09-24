@@ -284,6 +284,21 @@ export class GestureClassifier {
       }
     }
 
+    // HAND SPACE (Word Spacing / Word Composer Space)
+    // Triggered by rightward hand swipe or flat horizontal palm facing right
+    const isFlatRight = allOpen && (o.pointingSide || o.facingForward) && raw[LANDMARK.INDEX_TIP].x > raw[LANDMARK.WRIST].x + 0.08;
+    if ((motion.isSwipingRight && !motion.isWaving) || isFlatRight) {
+      results.push({ id: 'SPACE', confidence: 0.96, reason: 'Space (Swipe Right / Horizontal Flat Hand)' });
+    }
+
+    // HAND BACKSPACE (Delete Letter / Token Undo)
+    // Triggered by leftward hand swipe or Thumbs-Left / Index-Left gesture
+    const isThumbPointingLeft = allFolded && f.thumb === 'OPEN' && (raw[LANDMARK.THUMB_TIP].x < raw[LANDMARK.INDEX_MCP].x - 0.04 || raw[LANDMARK.THUMB_TIP].x < raw[LANDMARK.WRIST].x - 0.04);
+    const isIndexPointingLeft = f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && (raw[LANDMARK.INDEX_TIP].x < raw[LANDMARK.INDEX_MCP].x - 0.05);
+    if ((motion.isSwipingLeft && !motion.isWaving) || isThumbPointingLeft || isIndexPointingLeft) {
+      results.push({ id: 'BACKSPACE', confidence: 0.96, reason: 'Backspace (Swipe Left / Thumbs-Left)' });
+    }
+
     return results;
   }
 
@@ -473,6 +488,20 @@ export class GestureClassifier {
       results.push({ id: 'SIGN_ILY', confidence: 0.96, reason: 'ILY ASL sign' });
     }
 
+    // 17. HAND SPACE (Swipe Right / Horizontal Flat Palm)
+    const isFlatRight = (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') && (o.pointingSide || o.facingForward) && raw[LANDMARK.INDEX_TIP].x > raw[LANDMARK.WRIST].x + 0.08;
+    if ((motion.isSwipingRight && !motion.isWaving) || isFlatRight) {
+      results.push({ id: 'SPACE', confidence: 0.96, reason: 'Space (Swipe Right / Flat Palm Right)' });
+    }
+
+    // 18. HAND BACKSPACE (Swipe Left / Thumbs-Left / Index-Left)
+    const allFolded = f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED';
+    const isThumbLeft = allFolded && f.thumb === 'OPEN' && (raw[LANDMARK.THUMB_TIP].x < raw[LANDMARK.INDEX_MCP].x - 0.04 || raw[LANDMARK.THUMB_TIP].x < raw[LANDMARK.WRIST].x - 0.04);
+    const isIndexLeft = f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && (raw[LANDMARK.INDEX_TIP].x < raw[LANDMARK.INDEX_MCP].x - 0.05);
+    if ((motion.isSwipingLeft && !motion.isWaving) || isThumbLeft || isIndexLeft) {
+      results.push({ id: 'BACKSPACE', confidence: 0.96, reason: 'Backspace (Swipe Left / Thumbs-Left)' });
+    }
+
     return results;
   }
 
@@ -521,7 +550,8 @@ export class GestureClassifier {
   canTriggerCommit(signId) {
     if (!signId) return false;
     const now = performance.now();
-    if (signId === this.lastCommittedSign && (now - this.lastCommitTime) < this.commitCooldownMs) {
+    const cooldown = (signId === 'SPACE' || signId === 'BACKSPACE') ? 550 : this.commitCooldownMs;
+    if (signId === this.lastCommittedSign && (now - this.lastCommitTime) < cooldown) {
       return false;
     }
     this.lastCommittedSign = signId;

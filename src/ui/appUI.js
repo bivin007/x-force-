@@ -266,10 +266,13 @@ export function renderAppLayout(rootElement) {
               <div class="composer-title-wrap">
                 <span class="composer-badge">ASL LIVE WORD COMPOSER</span>
                 <span class="composer-hint">Fingerspell letters into live text</span>
+                <span class="composer-gesture-tag" title="Swipe hand right for Space, swipe left for Backspace">
+                  🖐️ <strong>Swipe ➔</strong> Space | 👈 <strong>Swipe ⬅</strong> Backspace
+                </span>
               </div>
               <div class="composer-actions">
-                <button id="btn-composer-space" class="btn-composer-tool" title="Add Space">␣ Space</button>
-                <button id="btn-composer-backspace" class="btn-composer-tool" title="Delete Last Letter">⌫ Backspace</button>
+                <button id="btn-composer-space" class="btn-composer-tool" title="Add Space (or Swipe Hand ➔ Right)">␣ Space <span class="kbd-pill">Hand ➔</span></button>
+                <button id="btn-composer-backspace" class="btn-composer-tool" title="Delete Last Letter (or Swipe Hand ⬅ Left / Thumbs-Left)">⌫ Backspace <span class="kbd-pill">Hand ⬅</span></button>
                 <button id="btn-composer-clear" class="btn-composer-tool" title="Clear All">Clear</button>
                 <button id="btn-composer-speak" class="btn-composer-speak" title="Speak Word Aloud">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>

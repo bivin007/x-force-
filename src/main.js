@@ -156,6 +156,22 @@ class App {
     // If stable and confident
     if (classification.isStable && classification.bestMatch && classification.confidence >= 65) {
       const sign = classification.bestMatch;
+
+      // Handle Real-Time Hand Space & Backspace Gestures
+      if (sign.id === 'SPACE') {
+        if (this.gestureClassifier.canTriggerCommit('SPACE')) {
+          this.triggerHandSpace();
+        }
+        return;
+      }
+
+      if (sign.id === 'BACKSPACE') {
+        if (this.gestureClassifier.canTriggerCommit('BACKSPACE')) {
+          this.triggerHandBackspace();
+        }
+        return;
+      }
+
       const isLetter = sign.category === 'asl_alphabet' || Boolean(sign.letter);
 
       if (isLetter) {
@@ -186,6 +202,56 @@ class App {
         }
       }
     }
+  }
+
+  triggerHandSpace() {
+    this.composedWord += ' ';
+    this.updateComposerDisplay();
+    this.flashComposerButton('btn-composer-space');
+    this.showGestureToast('␣ Space Added with Hand', '#38bdf8');
+  }
+
+  triggerHandBackspace() {
+    if (this.composedWord.length > 0) {
+      this.composedWord = this.composedWord.slice(0, -1);
+      this.updateComposerDisplay();
+    } else if (this.sentenceFormer.tokens && this.sentenceFormer.tokens.length > 0) {
+      this.sentenceFormer.removeToken(this.sentenceFormer.tokens.length - 1);
+    }
+    this.flashComposerButton('btn-composer-backspace');
+    this.showGestureToast('⌫ Backspace with Hand', '#f43f5e');
+  }
+
+  flashComposerButton(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.remove('gesture-active-flash');
+    void btn.offsetWidth; // Force DOM reflow
+    btn.classList.add('gesture-active-flash');
+    setTimeout(() => {
+      btn.classList.remove('gesture-active-flash');
+    }, 450);
+  }
+
+  showGestureToast(text, color = '#38bdf8') {
+    let toast = document.getElementById('hud-gesture-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'hud-gesture-toast';
+      toast.className = 'hud-gesture-toast';
+      const container = document.getElementById('camera-viewport-card') || document.body;
+      container.appendChild(toast);
+    }
+    toast.textContent = text;
+    toast.style.borderColor = color;
+    toast.classList.remove('hidden', 'fade-out');
+    toast.classList.add('visible');
+
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.classList.remove('visible', 'fade-out'), 300);
+    }, 1200);
   }
 
   appendSpelledLetter(letter) {

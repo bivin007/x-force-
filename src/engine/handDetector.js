@@ -429,13 +429,18 @@ export class HandDetector {
     let nodOffset = 0;
     let shakeOffset = 0;
 
+    let swipeRightOffset = 0;
+    let swipeLeftOffset = 0;
+
     if (signId === 'HELLO' || signId === 'GOOD_MORNING' || signId === 'GOOD_AFTERNOON') waveOffset = Math.sin(t * 6) * 0.06;
     if (signId === 'YES') nodOffset = Math.sin(t * 7) * 0.04;
     if (signId === 'NO' || signId === 'EMERGENCY' || signId === 'FEVER' || signId === 'INJURY' || signId === 'ASL_J' || signId === 'ASL_Z') {
       shakeOffset = Math.sin(t * 8) * 0.05;
     }
+    if (signId === 'SPACE') swipeRightOffset = (Math.sin(t * 5) * 0.08) + 0.06;
+    if (signId === 'BACKSPACE') swipeLeftOffset = (-Math.sin(t * 5) * 0.08) - 0.06;
 
-    base[0] = { x: 0.5 + waveOffset + shakeOffset, y: 0.72 + nodOffset, z: 0 };
+    base[0] = { x: 0.5 + waveOffset + shakeOffset + swipeRightOffset + swipeLeftOffset, y: 0.72 + nodOffset, z: 0 };
     base[1] = { x: base[0].x - 0.06, y: base[0].y - 0.04, z: 0 };
     base[2] = { x: base[0].x - 0.10, y: base[0].y - 0.08, z: 0 };
     base[5] = { x: base[0].x - 0.05, y: base[0].y - 0.18, z: 0 };
@@ -458,6 +463,14 @@ export class HandDetector {
       base[3] = { x: base[2].x + 0.04, y: base[2].y + 0.01, z: 0 };
       base[4] = { x: base[3].x + 0.04, y: base[3].y + 0.01, z: 0 };
       configureFinger(5, 8, true, 0); configureFinger(9, 12, true, 0); configureFinger(13, 16, true, 0); configureFinger(17, 20, true, 0);
+    } else if (signId === 'SPACE') {
+      base[3] = { x: base[2].x + 0.06, y: base[2].y - 0.02, z: 0 };
+      base[4] = { x: base[3].x + 0.06, y: base[3].y - 0.02, z: 0 };
+      configureFinger(5, 8, true, 0.04); configureFinger(9, 12, true, 0.04); configureFinger(13, 16, true, 0.04); configureFinger(17, 20, true, 0.04);
+    } else if (signId === 'BACKSPACE') {
+      base[3] = { x: base[2].x - 0.08, y: base[2].y, z: 0 };
+      base[4] = { x: base[3].x - 0.08, y: base[3].y, z: 0 };
+      configureFinger(5, 8, false); configureFinger(9, 12, false); configureFinger(13, 16, false); configureFinger(17, 20, false);
     } else if (signId === 'ASL_L' || signId === 'ID_CARD') {
       base[3] = { x: base[2].x - 0.06, y: base[2].y, z: 0 };
       base[4] = { x: base[3].x - 0.06, y: base[3].y, z: 0 };
