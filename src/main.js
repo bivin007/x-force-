@@ -125,18 +125,19 @@ class App {
    * Main vision results callback triggered every frame (~30-60 FPS)
    */
   onVisionResults(results) {
-    const { multiHandLandmarks, multiHandedness, latencyMs, fps } = results;
+    const { multiHandLandmarks, multiHandedness, latencyMs, fps, isCameraActive } = results;
 
     this.updateHudMetrics(latencyMs, fps, multiHandLandmarks.length);
 
     if (multiHandLandmarks.length === 0) {
       this.featureExtractor.resetHistory();
+      this.lastSpelledLetter = null;
       this.updateRecognitionCard(null, 0, [], { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' });
       return;
     }
 
     const extracted = this.featureExtractor.extractFeatures(multiHandLandmarks, multiHandedness);
-    const motion = this.featureExtractor.analyzeMotion(extracted.hands[0]?.label || 'Right');
+    const motion = this.featureExtractor.analyzeMotion(extracted.hands[0]?.label || 'Right', isCameraActive);
 
     if (this.isRecordingCustom && extracted.hands.length > 0) {
       const recResult = this.customTrainer.addSample(extracted.hands[0].featureVector);
@@ -154,7 +155,7 @@ class App {
     );
 
     // If stable and confident
-    if (classification.isStable && classification.bestMatch && classification.confidence >= 65) {
+    if (classification.isStable && classification.bestMatch && classification.confidence >= 50) {
       const sign = classification.bestMatch;
 
       // Handle Real-Time Hand Space & Backspace Gestures
@@ -177,7 +178,7 @@ class App {
       if (isLetter) {
         // ASL Letter fingerspelling handling
         const now = performance.now();
-        if (sign.letter !== this.lastSpelledLetter || (now - this.lastLetterTimestamp) > 1400) {
+        if (sign.letter !== this.lastSpelledLetter || (now - this.lastLetterTimestamp) > 650) {
           this.appendSpelledLetter(sign.letter || sign.spokenText);
           this.lastSpelledLetter = sign.letter;
           this.lastLetterTimestamp = now;
@@ -206,6 +207,7 @@ class App {
 
   triggerHandSpace() {
     this.composedWord += ' ';
+    this.lastSpelledLetter = null;
     this.updateComposerDisplay();
     this.flashComposerButton('btn-composer-space');
     this.showGestureToast('␣ Space Added with Hand', '#38bdf8');
@@ -218,6 +220,7 @@ class App {
     } else if (this.sentenceFormer.tokens && this.sentenceFormer.tokens.length > 0) {
       this.sentenceFormer.removeToken(this.sentenceFormer.tokens.length - 1);
     }
+    this.lastSpelledLetter = null;
     this.flashComposerButton('btn-composer-backspace');
     this.showGestureToast('⌫ Backspace with Hand', '#f43f5e');
   }
@@ -239,7 +242,7 @@ class App {
       toast = document.createElement('div');
       toast.id = 'hud-gesture-toast';
       toast.className = 'hud-gesture-toast';
-      const container = document.getElementById('camera-viewport-card') || document.body;
+      const container = document.getElementById('video-container') || document.body;
       container.appendChild(toast);
     }
     toast.textContent = text;

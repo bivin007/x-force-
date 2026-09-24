@@ -124,176 +124,183 @@ export class GestureClassifier {
     const raw = hand.raw;
     const aligned = hand.aligned || hand.normalized;
 
-    const allFolded = f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED';
+    const allNonOpen = f.index !== 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN';
     const allOpen = f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN';
 
+    // -------------------------------------------------------------
+    // HAND SPACE & BACKSPACE (High Priority in fingerspelling)
+    // -------------------------------------------------------------
+    // HAND SPACE: Distinct rightward swipe OR flat open hand held horizontally pointing right
+    const isHorizontalSpaceHand = o.pointingSide && Math.abs(o.roll) > 40 && f.index === 'OPEN' && f.middle === 'OPEN' && f.thumb === 'OPEN' && motion.isStationary;
+    if ((motion.isSwipingRight && motion.velocity.speed > 0.06 && !motion.isWaving) || isHorizontalSpaceHand) {
+      results.push({ id: 'SPACE', confidence: 0.98, reason: 'Space (Swipe Right / Horizontal Hand)' });
+    }
+
+    // HAND BACKSPACE: Distinct leftward swipe OR fist with thumb pointing left
+    const isSidewaysThumbsLeft = allNonOpen && f.thumb === 'OPEN' && Math.abs(o.roll) > 35 && o.pointingSide && motion.isStationary;
+    if ((motion.isSwipingLeft && motion.velocity.speed > 0.06 && !motion.isWaving) || isSidewaysThumbsLeft) {
+      results.push({ id: 'BACKSPACE', confidence: 0.98, reason: 'Backspace (Swipe Left / Thumbs-Left)' });
+    }
+
+    // -------------------------------------------------------------
+    // 26 ASL ALPHABET LETTERS (A - Z)
+    // -------------------------------------------------------------
     // ASL A: All 4 folded into fist, thumb standing straight upright alongside index finger
-    if (allFolded && f.thumb !== 'FOLDED' && aligned[LANDMARK.THUMB_TIP].y < aligned[LANDMARK.INDEX_MCP].y && aligned[LANDMARK.THUMB_TIP].x < -0.10) {
+    if (allNonOpen && f.thumb !== 'FOLDED' && aligned[LANDMARK.THUMB_TIP].y < aligned[LANDMARK.INDEX_MCP].y + 0.05 && aligned[LANDMARK.THUMB_TIP].x < 0.05) {
       results.push({ id: 'ASL_A', confidence: 0.96, reason: 'ASL Letter A (Upright thumb alongside fist)' });
     }
 
     // ASL B: 4 fingers straight open vertical, thumb folded across palm
-    if (allOpen && f.thumb === 'FOLDED' && !o.pointingDown) {
+    if ((f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN') && f.pinky !== 'FOLDED' && f.thumb !== 'OPEN' && !o.pointingDown) {
       results.push({ id: 'ASL_B', confidence: 0.97, reason: 'ASL Letter B (Vertical open palm, thumb tucked)' });
     }
 
     // ASL C: All 5 fingers curved in semi-circular C arc
-    if (f.index === 'HALF' && f.middle === 'HALF' && f.ring === 'HALF' && f.pinky === 'HALF' && f.thumb !== 'FOLDED') {
-      if (d.thumbTipToIndexTip > 0.18 && d.thumbTipToIndexTip < 0.50) {
+    if (f.index !== 'FOLDED' && f.middle !== 'FOLDED' && f.ring !== 'FOLDED' && (f.index === 'HALF' || f.middle === 'HALF') && f.thumb !== 'FOLDED') {
+      if (d.thumbTipToIndexTip > 0.15 && d.thumbTipToIndexTip < 0.58 && !o.pointingDown) {
         results.push({ id: 'ASL_C', confidence: 0.95, reason: 'ASL Letter C (Curved C arc)' });
       }
     }
 
     // ASL D: Index straight up, other 3 fingers curled touching thumb in circle
-    if (f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (d.thumbTipToMiddleTip < 0.24 || d.thumbTipToIndexTip < 0.32) {
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if ((d.thumbTipToMiddleTip < 0.28 || d.thumbTipToIndexTip < 0.35 || f.middle === 'HALF') && !o.pointingDown) {
         results.push({ id: 'ASL_D', confidence: 0.96, reason: 'ASL Letter D (Index up, circle base)' });
       }
     }
 
     // ASL E: All 4 fingers curled down with fingertips resting over thumb
-    if (allFolded && f.thumb === 'FOLDED') {
-      if (aligned[LANDMARK.INDEX_TIP].y > aligned[LANDMARK.INDEX_PIP].y - 0.05 && aligned[LANDMARK.THUMB_TIP].y >= aligned[LANDMARK.INDEX_PIP].y - 0.05) {
+    if (allNonOpen && f.thumb === 'FOLDED') {
+      if (aligned[LANDMARK.INDEX_TIP].y > aligned[LANDMARK.INDEX_PIP].y - 0.10) {
         results.push({ id: 'ASL_E', confidence: 0.94, reason: 'ASL Letter E (Fingertips curled over thumb)' });
       }
     }
 
     // ASL F: Thumb and Index touching in OK ring, other 3 fingers straight open
-    if (d.thumbTipToIndexTip < 0.18 && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
+    if (d.thumbTipToIndexTip < 0.22 && f.middle === 'OPEN' && f.ring !== 'FOLDED' && f.pinky !== 'FOLDED' && !o.pointingDown) {
       results.push({ id: 'ASL_F', confidence: 0.97, reason: 'ASL Letter F (OK circle with 3 fingers up)' });
     }
 
     // ASL G: Index and Thumb extended forward parallel horizontally (pinch shape)
-    if (f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && f.thumb === 'OPEN') {
-      if (o.pointingSide && d.thumbTipToIndexTip < 0.35 && !o.pointingDown) {
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb === 'OPEN') {
+      if ((o.pointingSide || Math.abs(o.roll) > 30) && d.thumbTipToIndexTip < 0.40 && !o.pointingDown) {
         results.push({ id: 'ASL_G', confidence: 0.94, reason: 'ASL Letter G (Index & thumb horizontal pinch)' });
       }
     }
 
     // ASL H: Index and Middle extended horizontally together
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (o.pointingSide && d.indexTipToMiddleTip < 0.13) {
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if ((o.pointingSide || Math.abs(o.roll) > 30) && d.indexTipToMiddleTip < 0.18 && !o.pointingDown) {
         results.push({ id: 'ASL_H', confidence: 0.94, reason: 'ASL Letter H (Two fingers pointing sideways)' });
       }
     }
 
     // ASL I: Only Pinky extended straight up
-    if (f.pinky === 'OPEN' && f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.thumb !== 'OPEN') {
-      if (!motion.isWaving && motion.velocity.speed < 0.06) {
+    if (f.pinky === 'OPEN' && f.index !== 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.thumb !== 'OPEN') {
+      if (!motion.isWaving && motion.velocity.speed < 0.07) {
         results.push({ id: 'ASL_I', confidence: 0.96, reason: 'ASL Letter I (Vertical pinky finger)' });
       }
     }
 
     // ASL J: Pinky extended with J-curve motion trajectory
-    if (f.pinky === 'OPEN' && f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED') {
-      if (motion.velocity.speed > 0.08 || motion.yReversals >= 1) {
+    if (f.pinky === 'OPEN' && f.index !== 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN') {
+      if (motion.velocity.speed > 0.05 || motion.yReversals >= 1 || motion.xReversals >= 1) {
         results.push({ id: 'ASL_J', confidence: 0.96, reason: 'ASL Letter J (Pinky swooping J curve)' });
       }
     }
 
-    // ASL K: Index vertical, Middle forward at 45 deg, Thumb between
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && f.thumb === 'OPEN') {
-      if (aligned[LANDMARK.INDEX_TIP].y < aligned[LANDMARK.MIDDLE_TIP].y - 0.08) {
+    // ASL K: Index vertical, Middle forward/upward, Thumb between
+    if (f.index === 'OPEN' && (f.middle === 'OPEN' || f.middle === 'HALF') && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb === 'OPEN') {
+      if (aligned[LANDMARK.INDEX_TIP].y < aligned[LANDMARK.MIDDLE_TIP].y - 0.03 && !o.pointingDown) {
         results.push({ id: 'ASL_K', confidence: 0.94, reason: 'ASL Letter K (Index up, middle forward)' });
       }
     }
 
     // ASL L: Thumb and Index at 90-degree L angle
-    if (f.index === 'OPEN' && f.thumb === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (a.thumbIndexSpread > 45 && a.thumbIndexSpread < 125) {
+    if (f.index === 'OPEN' && f.thumb === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (a.thumbIndexSpread > 35 && a.thumbIndexSpread < 135 && !o.pointingDown) {
         results.push({ id: 'ASL_L', confidence: 0.97, reason: 'ASL Letter L (Perpendicular L-shape)' });
       }
     }
 
     // ASL M: 3 knuckles over thumb (thumb tucked under ring)
-    if (allFolded && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.RING_MCP].x - 0.05 && aligned[LANDMARK.THUMB_TIP].x <= aligned[LANDMARK.PINKY_MCP].x + 0.05) {
+    if (allNonOpen && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.RING_MCP].x - 0.08 && aligned[LANDMARK.THUMB_TIP].x <= aligned[LANDMARK.PINKY_MCP].x + 0.08) {
       results.push({ id: 'ASL_M', confidence: 0.92, reason: 'ASL Letter M (Three knuckles over thumb)' });
     }
 
     // ASL N: 2 knuckles over thumb (thumb tucked under middle)
-    if (allFolded && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.MIDDLE_MCP].x - 0.05 && aligned[LANDMARK.THUMB_TIP].x < aligned[LANDMARK.RING_MCP].x) {
+    if (allNonOpen && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.MIDDLE_MCP].x - 0.08 && aligned[LANDMARK.THUMB_TIP].x < aligned[LANDMARK.RING_MCP].x) {
       results.push({ id: 'ASL_N', confidence: 0.93, reason: 'ASL Letter N (Two knuckles over thumb)' });
     }
 
     // ASL O: All 5 fingertips meeting thumb in O-ring
-    if (d.thumbTipToIndexTip < 0.14 && d.thumbTipToMiddleTip < 0.16 && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+    if (d.thumbTipToIndexTip < 0.20 && d.thumbTipToMiddleTip < 0.22 && f.index !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
       results.push({ id: 'ASL_O', confidence: 0.96, reason: 'ASL Letter O (Circular O hand)' });
     }
 
     // ASL P: K-shape pointing downwards
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.thumb === 'OPEN' && o.pointingDown) {
+    if (f.index === 'OPEN' && (f.middle === 'OPEN' || f.middle === 'HALF') && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb === 'OPEN' && o.pointingDown) {
       results.push({ id: 'ASL_P', confidence: 0.94, reason: 'ASL Letter P (Downward K hand)' });
     }
 
     // ASL Q: G-shape pointing downwards
-    if (f.index === 'OPEN' && f.thumb === 'OPEN' && f.middle === 'FOLDED' && o.pointingDown) {
+    if (f.index === 'OPEN' && f.thumb === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && o.pointingDown) {
       results.push({ id: 'ASL_Q', confidence: 0.94, reason: 'ASL Letter Q (Downward pinch)' });
     }
 
     // ASL R: Index & Middle crossed over each other
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (d.indexTipToMiddleTip < 0.09) {
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (d.indexTipToMiddleTip < 0.12 && !o.pointingSide && !o.pointingDown) {
         results.push({ id: 'ASL_R', confidence: 0.95, reason: 'ASL Letter R (Crossed fingers)' });
       }
     }
 
-    // ASL S: Tight fist with thumb wrapped across front of all 4 fingers
-    if (allFolded && f.thumb === 'FOLDED') {
-      if (aligned[LANDMARK.THUMB_TIP].x >= -0.10 && aligned[LANDMARK.THUMB_TIP].x <= 0.15 && aligned[LANDMARK.THUMB_TIP].y >= aligned[LANDMARK.INDEX_PIP].y) {
+    // ASL S: Tight fist with thumb wrapped across front of fingers
+    if (allNonOpen && f.thumb !== 'OPEN') {
+      if (aligned[LANDMARK.THUMB_TIP].x >= -0.15 && aligned[LANDMARK.THUMB_TIP].x <= 0.20 && aligned[LANDMARK.THUMB_TIP].y >= aligned[LANDMARK.INDEX_PIP].y - 0.05) {
         results.push({ id: 'ASL_S', confidence: 0.95, reason: 'ASL Letter S (Thumb wrapped in front of fist)' });
       }
     }
 
     // ASL T: Thumb tucked between index and middle
-    if (allFolded && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.INDEX_MCP].x - 0.05 && aligned[LANDMARK.THUMB_TIP].x < aligned[LANDMARK.MIDDLE_MCP].x) {
+    if (allNonOpen && aligned[LANDMARK.THUMB_TIP].x >= aligned[LANDMARK.INDEX_MCP].x - 0.08 && aligned[LANDMARK.THUMB_TIP].x < aligned[LANDMARK.MIDDLE_MCP].x + 0.04) {
       results.push({ id: 'ASL_T', confidence: 0.93, reason: 'ASL Letter T (Thumb between index and middle)' });
     }
 
     // ASL U: Index and Middle straight up touching together
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && f.thumb === 'FOLDED') {
-      if (d.indexTipToMiddleTip < 0.11 && a.indexMiddleSpread < 12) {
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb !== 'OPEN') {
+      if ((d.indexTipToMiddleTip < 0.13 || a.indexMiddleSpread < 14) && !o.pointingSide && !o.pointingDown) {
         results.push({ id: 'ASL_U', confidence: 0.96, reason: 'ASL Letter U (Index & middle touching parallel)' });
       }
     }
 
     // ASL V: Index and Middle straight up spread apart (V-shape)
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && f.thumb === 'FOLDED') {
-      if (d.indexTipToMiddleTip >= 0.13 || a.indexMiddleSpread >= 13) {
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb !== 'OPEN') {
+      if ((d.indexTipToMiddleTip >= 0.11 || a.indexMiddleSpread >= 13) && !o.pointingSide && !o.pointingDown) {
         results.push({ id: 'ASL_V', confidence: 0.97, reason: 'ASL Letter V (Peace / V-sign)' });
       }
     }
 
     // ASL W: Index, Middle, Ring straight up in W
-    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'FOLDED') {
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky !== 'OPEN' && !o.pointingDown) {
       results.push({ id: 'ASL_W', confidence: 0.97, reason: 'ASL Letter W (Three fingers in W)' });
     }
 
     // ASL X: Index bent in hook shape
-    if (f.index === 'HALF' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED' && f.thumb !== 'OPEN') {
+    if (f.index === 'HALF' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN' && f.thumb !== 'OPEN') {
       results.push({ id: 'ASL_X', confidence: 0.95, reason: 'ASL Letter X (Hooked index finger)' });
     }
 
     // ASL Y: Thumb and Pinky extended wide (Hang Loose)
-    if (f.thumb === 'OPEN' && f.pinky === 'OPEN' && f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED') {
+    if (f.thumb === 'OPEN' && f.pinky === 'OPEN' && f.index !== 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN') {
       results.push({ id: 'ASL_Y', confidence: 0.98, reason: 'ASL Letter Y (Thumb and pinky extended)' });
     }
 
     // ASL Z: Index extended tracing Z in air
-    if (f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (motion.xReversals >= 2 && motion.velocity.speed > 0.06) {
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (motion.xReversals >= 1 || motion.velocity.speed > 0.05) {
         results.push({ id: 'ASL_Z', confidence: 0.96, reason: 'ASL Letter Z (Z-shaped air trajectory)' });
       }
-    }
-
-    // HAND SPACE: Distinct rightward hand swipe
-    if (motion.isSwipingRight && motion.velocity.speed > 0.08 && motion.velocity.x > 0.05 && !motion.isWaving) {
-      results.push({ id: 'SPACE', confidence: 0.98, reason: 'Space (Dynamic Swipe Right)' });
-    }
-
-    // HAND BACKSPACE: Distinct leftward hand swipe OR explicit sideways thumbs-left gesture
-    const isSidewaysThumbsLeft = allFolded && f.thumb === 'OPEN' && Math.abs(o.roll) > 55 && o.pointingSide && motion.isStationary;
-    if ((motion.isSwipingLeft && motion.velocity.speed > 0.08 && motion.velocity.x < -0.05 && !motion.isWaving) || isSidewaysThumbsLeft) {
-      results.push({ id: 'BACKSPACE', confidence: 0.98, reason: 'Backspace (Dynamic Swipe Left / Thumbs-Left)' });
     }
 
     return results;
@@ -380,21 +387,21 @@ export class GestureClassifier {
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
       if (motion.isWaving) {
         results.push({ id: 'HELLO', confidence: 0.96, reason: 'Open palm with wave motion' });
-      } else if (o.pointingUp && raw[LANDMARK.WRIST].y < 0.70 && !motion.isSwipingRight) {
+      } else if (o.pointingUp && raw[LANDMARK.WRIST].y < 0.60 && !motion.isSwipingRight) {
         results.push({ id: 'HELLO', confidence: 0.88, reason: 'Open high palm facing forward' });
       }
     }
 
     // 2. THANK YOU: Flat hand moving forward from chin
     if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
-      if (raw[LANDMARK.INDEX_TIP].y < 0.50 && !motion.isWaving && !motion.isSwipingRight) {
+      if (raw[LANDMARK.INDEX_TIP].y < 0.48 && !motion.isWaving && !motion.isSwipingRight) {
         results.push({ id: 'THANK_YOU', confidence: 0.91, reason: 'Open hand near chin moving outward' });
       }
     }
 
     // 3. PLEASE: Flat hand over chest with gentle circular motion
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
-      if (raw[LANDMARK.WRIST].y >= 0.58 && raw[LANDMARK.WRIST].y <= 0.88 && !motion.isWaving && !motion.isSwipingRight) {
+      if (raw[LANDMARK.WRIST].y >= 0.60 && raw[LANDMARK.WRIST].y <= 0.88 && !motion.isWaving && !motion.isSwipingRight) {
         results.push({ id: 'PLEASE', confidence: 0.89, reason: 'Flat hand centered at chest' });
       }
     }
@@ -479,12 +486,12 @@ export class GestureClassifier {
     }
 
     // 16. HAND SPACE (Swipe Right in Gestures mode)
-    if (motion.isSwipingRight && motion.velocity.speed > 0.08 && motion.velocity.x > 0.05 && !motion.isWaving) {
+    if (motion.isSwipingRight && motion.velocity.speed > 0.06 && !motion.isWaving) {
       results.push({ id: 'SPACE', confidence: 0.98, reason: 'Space (Swipe Right)' });
     }
 
     // 17. HAND BACKSPACE (Swipe Left in Gestures mode)
-    if (motion.isSwipingLeft && motion.velocity.speed > 0.08 && motion.velocity.x < -0.05 && !motion.isWaving) {
+    if (motion.isSwipingLeft && motion.velocity.speed > 0.06 && !motion.isWaving) {
       results.push({ id: 'BACKSPACE', confidence: 0.98, reason: 'Backspace (Swipe Left)' });
     }
 
@@ -502,7 +509,7 @@ export class GestureClassifier {
 
     // Fast-path for dynamic swipe gestures (SPACE, BACKSPACE, ASL_J, ASL_Z, EMERGENCY)
     if (signId === 'SPACE' || signId === 'BACKSPACE' || signId === 'ASL_J' || signId === 'ASL_Z' || signId === 'EMERGENCY') {
-      if (confidence >= 0.75) {
+      if (confidence >= 0.70) {
         return {
           stableSign: signId,
           confidence,
@@ -531,7 +538,7 @@ export class GestureClassifier {
       }
     }
 
-    const isStable = maxCount >= 3; // At least 3 of last 5 frames agreed
+    const isStable = maxCount >= 2; // At least 2 of last 5 frames agreed
     const avgConfidence = this.historyBuffer.length > 0 ? (totalConf / this.historyBuffer.length) : 0;
 
     return {
@@ -547,7 +554,7 @@ export class GestureClassifier {
   canTriggerCommit(signId) {
     if (!signId) return false;
     const now = performance.now();
-    const cooldown = (signId === 'SPACE' || signId === 'BACKSPACE') ? 550 : this.commitCooldownMs;
+    const cooldown = (signId === 'SPACE' || signId === 'BACKSPACE') ? 420 : this.commitCooldownMs;
     if (signId === this.lastCommittedSign && (now - this.lastCommitTime) < cooldown) {
       return false;
     }
@@ -556,3 +563,4 @@ export class GestureClassifier {
     return true;
   }
 }
+

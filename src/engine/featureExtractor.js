@@ -107,15 +107,15 @@ export class FeatureExtractor {
       const pipDistToWrist = distance(raw[pipIdx], wrist);
       const mcpDistToWrist = distance(raw[mcpIdx], wrist);
 
-      // In canonical aligned coordinates, an extended finger has tip much higher (-Y) than PIP
-      const isAlignedExtended = aligned && aligned[tipIdx].y < aligned[pipIdx].y - 0.18;
-      const isAlignedFolded = aligned && (aligned[tipIdx].y > aligned[pipIdx].y - 0.04 || distance(aligned[tipIdx], aligned[mcpIdx]) < 0.40);
+      // In canonical aligned coordinates, an extended finger has tip higher (-Y) than PIP
+      const isAlignedExtended = aligned && aligned[tipIdx].y < aligned[pipIdx].y - 0.14;
+      const isAlignedFolded = aligned && (aligned[tipIdx].y > aligned[pipIdx].y - 0.03 || distance(aligned[tipIdx], aligned[mcpIdx]) < 0.38);
 
-      const isStraight = (pipAngle > 140 && dipAngle > 135) || isAlignedExtended;
-      const isExtended = tipDistToWrist > pipDistToWrist * 1.05 || isAlignedExtended;
+      const isStraight = (pipAngle > 130 && dipAngle > 125) || isAlignedExtended;
+      const isExtended = tipDistToWrist > pipDistToWrist * 1.02 || isAlignedExtended;
 
       if (isStraight && isExtended && !isAlignedFolded) return 'OPEN';
-      if (tipDistToWrist < mcpDistToWrist * 1.15 || pipAngle < 110 || isAlignedFolded) return 'FOLDED';
+      if (tipDistToWrist < mcpDistToWrist * 1.18 || pipAngle < 112 || isAlignedFolded) return 'FOLDED';
       return 'HALF';
     };
 
@@ -126,20 +126,20 @@ export class FeatureExtractor {
 
     let thumbState = 'FOLDED';
     if (aligned) {
-      const thumbOut = Math.abs(aligned[LANDMARK.THUMB_TIP].x) > 0.42 || thumbTipDistToIndexMcp > 0.42;
-      const thumbIn = thumbTipDistToPinkyMcp < 0.38 || thumbTipDistToIndexMcp < 0.28;
+      const thumbOut = Math.abs(aligned[LANDMARK.THUMB_TIP].x) > 0.38 || thumbTipDistToIndexMcp > 0.38;
+      const thumbIn = thumbTipDistToPinkyMcp < 0.36 || thumbTipDistToIndexMcp < 0.26;
 
-      if (thumbOut && thumbIpAngle > 130) {
+      if (thumbOut && thumbIpAngle > 125) {
         thumbState = 'OPEN';
-      } else if (thumbIn || thumbIpAngle < 115) {
+      } else if (thumbIn || thumbIpAngle < 110) {
         thumbState = 'FOLDED';
       } else {
         thumbState = 'HALF';
       }
     } else {
-      if (thumbIpAngle > 140 && thumbTipDistToPinkyMcp > 0.50) {
+      if (thumbIpAngle > 135 && thumbTipDistToPinkyMcp > 0.46) {
         thumbState = 'OPEN';
-      } else if (thumbTipDistToPinkyMcp < 0.35) {
+      } else if (thumbTipDistToPinkyMcp < 0.34) {
         thumbState = 'FOLDED';
       } else {
         thumbState = 'HALF';
@@ -257,31 +257,44 @@ export class FeatureExtractor {
     });
   }
 
-  /**
-   * Analyze kinematic motion from history (velocity, direction, oscillations)
-   */
-  analyzeMotion(handLabel = 'Right') {
+  analyzeMotion(handLabel = 'Right', isCameraActive = false) {
     const key = handLabel === 'Left' ? 'leftHand' : 'rightHand';
     const history = this.motionHistory[key];
 
-    if (!history || history.length < 5) {
+    if (!history || history.length < 3) {
       return {
         velocity: { x: 0, y: 0, speed: 0 },
         isWaving: false,
         isNodding: false,
         isShaking: false,
         isStationary: true,
+        isSwipingRight: false,
+        isSwipingLeft: false,
+        xReversals: 0,
+        yReversals: 0,
         motionTrajectory: []
       };
     }
 
     const first = history[0];
     const last = history[history.length - 1];
-    const dt = Math.max(1, (last.time - first.time) / 1000);
+    const dt = Math.max(0.05, (last.time - first.time) / 1000);
 
-    const totalDx = last.palmCenter.x - first.palmCenter.x;
+    const rawTotalDx = last.palmCenter.x - first.palmCenter.x;
     const totalDy = last.palmCenter.y - first.palmCenter.y;
-    const speed = Math.sqrt(totalDx * totalDx + totalDy * totalDy) / dt;
+    const speed = Math.sqrt(rawTotalDx * rawTotalDx + totalDy * totalDy) / dt;
+
+    // Short-term sliding window (last 6-8 frames, ~180-250ms) for high-speed dynamic swipes
+    const recentWindow = history.slice(-Math.min(8, history.length));
+    const recentFirst = recentWindow[0];
+    const recentDt = Math.max(0.04, (last.time - recentFirst.time) / 1000);
+    const rawRecentDx = last.palmCenter.x - recentFirst.palmCenter.x;
+    const recentDy = last.palmCenter.y - recentFirst.palmCenter.y;
+    const recentSpeed = Math.sqrt(rawRecentDx * rawRecentDx + recentDy * recentDy) / recentDt;
+
+    // Compensate for webcam mirror display: user moving right on screen produces dx < 0 in raw camera
+    const visualRecentDx = isCameraActive ? -rawRecentDx : rawRecentDx;
+    const visualTotalDx = isCameraActive ? -rawTotalDx : rawTotalDx;
 
     // Count directional reversals (for wave and shake detection)
     let xReversals = 0;
@@ -293,24 +306,31 @@ export class FeatureExtractor {
       const cdx = history[i].palmCenter.x - history[i - 1].palmCenter.x;
       const cdy = history[i].palmCenter.y - history[i - 1].palmCenter.y;
 
-      if (Math.abs(cdx) > 0.004 && prevDx !== 0 && (cdx * prevDx < 0)) xReversals++;
-      if (Math.abs(cdy) > 0.004 && prevDy !== 0 && (cdy * prevDy < 0)) yReversals++;
+      if (Math.abs(cdx) > 0.003 && prevDx !== 0 && (cdx * prevDx < 0)) xReversals++;
+      if (Math.abs(cdy) > 0.003 && prevDy !== 0 && (cdy * prevDy < 0)) yReversals++;
 
-      if (Math.abs(cdx) > 0.003) prevDx = cdx;
-      if (Math.abs(cdy) > 0.003) prevDy = cdy;
+      if (Math.abs(cdx) > 0.002) prevDx = cdx;
+      if (Math.abs(cdy) > 0.002) prevDy = cdy;
     }
 
-    const isWaving = xReversals >= 2 && speed > 0.08;
+    const isWaving = xReversals >= 2 && speed > 0.07;
     const isShaking = xReversals >= 3;
     const isNodding = yReversals >= 2;
-    const isStationary = speed < 0.04 && xReversals < 2 && yReversals < 2;
+    const isStationary = speed < 0.045 && recentSpeed < 0.055 && xReversals < 2 && yReversals < 2;
 
-    // Horizontal swipe gesture kinematics (Space: Rightward swipe, Backspace: Leftward swipe)
-    const isSwipingRight = totalDx > 0.035 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && xReversals <= 1 && speed > 0.05;
-    const isSwipingLeft = totalDx < -0.035 && Math.abs(totalDx) > Math.abs(totalDy) * 1.2 && xReversals <= 1 && speed > 0.05;
+    // Responsive horizontal swipe detection (Space: Rightward swipe on screen, Backspace: Leftward swipe on screen)
+    const isSwipingRight = (visualRecentDx > 0.028 || visualTotalDx > 0.038) &&
+      Math.abs(visualRecentDx) > Math.abs(recentDy) * 0.9 &&
+      xReversals <= 1 &&
+      recentSpeed > 0.07;
+
+    const isSwipingLeft = (visualRecentDx < -0.028 || visualTotalDx < -0.038) &&
+      Math.abs(visualRecentDx) > Math.abs(recentDy) * 0.9 &&
+      xReversals <= 1 &&
+      recentSpeed > 0.07;
 
     return {
-      velocity: { x: totalDx / dt, y: totalDy / dt, speed },
+      velocity: { x: visualRecentDx / recentDt, y: recentDy / recentDt, speed: recentSpeed },
       isWaving,
       isNodding,
       isShaking,
@@ -345,3 +365,4 @@ export class FeatureExtractor {
     };
   }
 }
+
