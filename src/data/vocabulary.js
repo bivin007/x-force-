@@ -1,0 +1,986 @@
+/**
+ * Sign Language Vocabulary & Complete ASL Alphabet Fingerspelling
+ * Supports:
+ * 1. ASL Alphabet Fingerspelling (A through Z) + Word Composer Controls
+ * 2. Public Service Gestures (Bank, Hospital, Civic, Emergency, General)
+ * 3. Numerical & Conversational Gestures
+ */
+
+import { VIDEO_DATASET_REGISTRY } from './videoDataset.js';
+
+export const SIGN_CATEGORIES = {
+  ASL_ALPHABET: { id: 'asl_alphabet', name: 'ASL Alphabet (A-Z)', icon: 'type', color: '#ec4899' },
+  GENERAL: { id: 'general', name: 'General & Courtesies', icon: 'message-square', color: '#38bdf8' },
+  FINANCIAL: { id: 'financial', name: 'Bank & Financial', icon: 'credit-card', color: '#34d399' },
+  MEDICAL: { id: 'medical', name: 'Hospital & Health', icon: 'activity', color: '#f87171' },
+  CIVIC: { id: 'civic', name: 'Govt & Civic Services', icon: 'building-2', color: '#fbbf24' },
+  ACTIONS: { id: 'actions', name: 'Action Verbs', icon: 'zap', color: '#10b981' },
+  FOOD: { id: 'food', name: 'Food & Essentials', icon: 'coffee', color: '#f97316' },
+  ANIMALS: { id: 'animals', name: 'Animals & Nature', icon: 'trees', color: '#a855f7' },
+  EMERGENCY: { id: 'emergency', name: 'Urgent & Safety', icon: 'alert-triangle', color: '#ef4444' },
+  NUMBERS: { id: 'numbers', name: 'Numbers 1-10', icon: 'hash', color: '#a78bfa' }
+};
+
+const BASE_VOCABULARY = [
+  // =========================================================================
+  // 1. COMPLETE ASL ALPHABET (A - Z)
+  // =========================================================================
+  {
+    id: 'ASL_A',
+    name: 'ASL Letter A',
+    letter: 'A',
+    category: 'asl_alphabet',
+    spokenText: 'A',
+    description: 'Fist with thumb resting straight upright alongside the index finger.',
+    counterResponse: 'Letter A recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Make a fist, keep thumb straight resting against the side of the index finger.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['a', 'letter a']
+  },
+  {
+    id: 'ASL_B',
+    name: 'ASL Letter B',
+    letter: 'B',
+    category: 'asl_alphabet',
+    spokenText: 'B',
+    description: 'Flat open hand with four fingers straight up and thumb folded across the palm.',
+    counterResponse: 'Letter B recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Hold all four fingers vertically together, fold thumb horizontally across the palm.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['b', 'letter b']
+  },
+  {
+    id: 'ASL_C',
+    name: 'ASL Letter C',
+    letter: 'C',
+    category: 'asl_alphabet',
+    spokenText: 'C',
+    description: 'All fingers curved into a C-shape resembling the letter C.',
+    counterResponse: 'Letter C recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Curve fingers and thumb into a smooth semi-circle C shape.',
+    keyFingerStates: { thumb: 'HALF', index: 'HALF', middle: 'HALF', ring: 'HALF', pinky: 'HALF' },
+    scenarioKeywords: ['c', 'letter c']
+  },
+  {
+    id: 'ASL_D',
+    name: 'ASL Letter D',
+    letter: 'D',
+    category: 'asl_alphabet',
+    spokenText: 'D',
+    description: 'Index finger pointing straight up; thumb touches tips of middle, ring, and pinky.',
+    counterResponse: 'Letter D recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Point index finger straight up, touch tips of other 3 fingers to the thumb forming a circle.',
+    keyFingerStates: { thumb: 'HALF', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['d', 'letter d']
+  },
+  {
+    id: 'ASL_E',
+    name: 'ASL Letter E',
+    letter: 'E',
+    category: 'asl_alphabet',
+    spokenText: 'E',
+    description: 'All 4 fingertips curled tightly down resting on top of folded thumb.',
+    counterResponse: 'Letter E recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Curl all fingers tightly into palm with thumb tucked below fingertips.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['e', 'letter e']
+  },
+  {
+    id: 'ASL_F',
+    name: 'ASL Letter F',
+    letter: 'F',
+    category: 'asl_alphabet',
+    spokenText: 'F',
+    description: 'Thumb and index fingertips touch in circle (OK shape); middle, ring, and pinky extended straight.',
+    counterResponse: 'Letter F recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Touch thumb and index tips together, fan middle, ring, and pinky fingers straight up.',
+    keyFingerStates: { thumb: 'HALF', index: 'HALF', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['f', 'letter f']
+  },
+  {
+    id: 'ASL_G',
+    name: 'ASL Letter G',
+    letter: 'G',
+    category: 'asl_alphabet',
+    spokenText: 'G',
+    description: 'Index finger and thumb extended horizontally parallel like a pinch; others folded.',
+    counterResponse: 'Letter G recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend index and thumb horizontally pointing left/forward, fold remaining 3 fingers.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['g', 'letter g']
+  },
+  {
+    id: 'ASL_H',
+    name: 'ASL Letter H',
+    letter: 'H',
+    category: 'asl_alphabet',
+    spokenText: 'H',
+    description: 'Index and middle fingers extended together horizontally; thumb tucked.',
+    counterResponse: 'Letter H recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend index and middle fingers together horizontally sideways, fold ring and pinky.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['h', 'letter h']
+  },
+  {
+    id: 'ASL_I',
+    name: 'ASL Letter I',
+    letter: 'I',
+    category: 'asl_alphabet',
+    spokenText: 'I',
+    description: 'Pinky finger extended straight up; other 3 fingers folded into fist with thumb across.',
+    counterResponse: 'Letter I recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend only pinky finger straight up, hold other fingers tightly closed.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'OPEN' },
+    scenarioKeywords: ['i', 'letter i']
+  },
+  {
+    id: 'ASL_J',
+    name: 'ASL Letter J',
+    letter: 'J',
+    category: 'asl_alphabet',
+    spokenText: 'J',
+    description: 'Pinky finger extended drawing a J-hook curve in the air.',
+    counterResponse: 'Letter J recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'j_curve',
+    visualGuide: 'Extend pinky finger and trace a letter J swoop in the air downward and up.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'OPEN' },
+    scenarioKeywords: ['j', 'letter j']
+  },
+  {
+    id: 'ASL_K',
+    name: 'ASL Letter K',
+    letter: 'K',
+    category: 'asl_alphabet',
+    spokenText: 'K',
+    description: 'Index finger pointing up, middle finger angled forward, thumb resting between them.',
+    counterResponse: 'Letter K recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Hold index straight up, middle finger forward at 45 degrees, thumb placed between them.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['k', 'letter k']
+  },
+  {
+    id: 'ASL_L',
+    name: 'ASL Letter L',
+    letter: 'L',
+    category: 'asl_alphabet',
+    spokenText: 'L',
+    description: 'Thumb and index extended perpendicular forming an L-shape; other 3 folded.',
+    counterResponse: 'Letter L recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend thumb sideways and index finger straight up in a distinct L angle.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['l', 'letter l']
+  },
+  {
+    id: 'ASL_M',
+    name: 'ASL Letter M',
+    letter: 'M',
+    category: 'asl_alphabet',
+    spokenText: 'M',
+    description: 'Thumb tucked under index, middle, and ring fingers (three fingers over thumb).',
+    counterResponse: 'Letter M recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Tuck thumb under index, middle, and ring fingers, curl pinky against palm.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['m', 'letter m']
+  },
+  {
+    id: 'ASL_N',
+    name: 'ASL Letter N',
+    letter: 'N',
+    category: 'asl_alphabet',
+    spokenText: 'N',
+    description: 'Thumb tucked under index and middle fingers (two fingers over thumb).',
+    counterResponse: 'Letter N recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Tuck thumb under index and middle fingers, fold ring and pinky against palm.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['n', 'letter n']
+  },
+  {
+    id: 'ASL_O',
+    name: 'ASL Letter O',
+    letter: 'O',
+    category: 'asl_alphabet',
+    spokenText: 'O',
+    description: 'All fingers curved to meet the thumb, forming a circle like the letter O.',
+    counterResponse: 'Letter O recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Touch all 4 fingertips to the tip of your thumb to form an O circle.',
+    keyFingerStates: { thumb: 'HALF', index: 'HALF', middle: 'HALF', ring: 'HALF', pinky: 'HALF' },
+    scenarioKeywords: ['o', 'letter o']
+  },
+  {
+    id: 'ASL_P',
+    name: 'ASL Letter P',
+    letter: 'P',
+    category: 'asl_alphabet',
+    spokenText: 'P',
+    description: 'K-hand shape pointing downward (index forward, middle pointing down).',
+    counterResponse: 'Letter P recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Form K shape with index, middle, and thumb, point hand downwards towards floor.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['p', 'letter p']
+  },
+  {
+    id: 'ASL_Q',
+    name: 'ASL Letter Q',
+    letter: 'Q',
+    category: 'asl_alphabet',
+    spokenText: 'Q',
+    description: 'G-hand shape pointing downward towards the ground.',
+    counterResponse: 'Letter Q recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Form G-shape with index and thumb parallel, rotate wrist pointing straight down.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['q', 'letter q']
+  },
+  {
+    id: 'ASL_R',
+    name: 'ASL Letter R',
+    letter: 'R',
+    category: 'asl_alphabet',
+    spokenText: 'R',
+    description: 'Index and middle fingers crossed over each other like good luck gesture.',
+    counterResponse: 'Letter R recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Cross middle finger over index finger pointing vertically upward.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['r', 'letter r', 'cross']
+  },
+  {
+    id: 'ASL_S',
+    name: 'ASL Letter S',
+    letter: 'S',
+    category: 'asl_alphabet',
+    spokenText: 'S',
+    description: 'Tight fist with thumb folded horizontally in front of the fingers.',
+    counterResponse: 'Letter S recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Make a tight fist and wrap thumb across the front of all 4 fingers.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['s', 'letter s', 'fist']
+  },
+  {
+    id: 'ASL_T',
+    name: 'ASL Letter T',
+    letter: 'T',
+    category: 'asl_alphabet',
+    spokenText: 'T',
+    description: 'Thumb tucked directly between the index and middle fingers in a fist.',
+    counterResponse: 'Letter T recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Make a fist with thumb sticking up between index and middle knuckles.',
+    keyFingerStates: { thumb: 'HALF', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['t', 'letter t']
+  },
+  {
+    id: 'ASL_U',
+    name: 'ASL Letter U',
+    letter: 'U',
+    category: 'asl_alphabet',
+    spokenText: 'U',
+    description: 'Index and middle fingers extended straight up, held tightly together with no gap.',
+    counterResponse: 'Letter U recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend index and middle fingers straight up touching side by side.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['u', 'letter u']
+  },
+  {
+    id: 'ASL_V',
+    name: 'ASL Letter V',
+    letter: 'V',
+    category: 'asl_alphabet',
+    spokenText: 'V',
+    description: 'Index and middle fingers extended upward spread apart in a V-shape.',
+    counterResponse: 'Letter V recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend index and middle fingers upward in a wide victory V angle.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['v', 'letter v', 'peace']
+  },
+  {
+    id: 'ASL_W',
+    name: 'ASL Letter W',
+    letter: 'W',
+    category: 'asl_alphabet',
+    spokenText: 'W',
+    description: 'Index, middle, and ring fingers extended upward spread in a W-shape.',
+    counterResponse: 'Letter W recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend index, middle, and ring fingers spread apart pointing up, thumb holds pinky.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'FOLDED' },
+    scenarioKeywords: ['w', 'letter w']
+  },
+  {
+    id: 'ASL_X',
+    name: 'ASL Letter X',
+    letter: 'X',
+    category: 'asl_alphabet',
+    spokenText: 'X',
+    description: 'Index finger curled into a hooked shape; other 3 fingers folded into fist.',
+    counterResponse: 'Letter X recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Make a fist and bend index finger into a hook shape like a pirate hook.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'HALF', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['x', 'letter x', 'hook']
+  },
+  {
+    id: 'ASL_Y',
+    name: 'ASL Letter Y',
+    letter: 'Y',
+    category: 'asl_alphabet',
+    spokenText: 'Y',
+    description: 'Thumb and pinky finger extended wide outwards (hang loose); middle 3 fingers folded.',
+    counterResponse: 'Letter Y recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend thumb and pinky finger wide outwards, hold 3 middle fingers flat to palm.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'OPEN' },
+    scenarioKeywords: ['y', 'letter y']
+  },
+  {
+    id: 'ASL_Z',
+    name: 'ASL Letter Z',
+    letter: 'Z',
+    category: 'asl_alphabet',
+    spokenText: 'Z',
+    description: 'Index finger drawing a Z in the air (horizontal, diagonal, horizontal).',
+    counterResponse: 'Letter Z recorded.',
+    serviceContext: 'Fingerspelling names, account numbers, and acronyms',
+    handsRequired: 1,
+    motionType: 'z_trace',
+    visualGuide: 'Point index finger forward and trace the shape of letter Z in the air.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['z', 'letter z']
+  },
+
+  // =========================================================================
+  // 2. PUBLIC SERVICE & CONVERSATIONAL GESTURE VOCABULARY
+  // =========================================================================
+  {
+    id: 'HELLO',
+    name: 'Hello / Greetings',
+    category: 'general',
+    spokenText: 'Hello, good day!',
+    description: 'Open flat hand near head waving or moving outward gracefully.',
+    counterResponse: 'Welcome! How may I assist you today?',
+    serviceContext: 'Initial greeting at service desk',
+    handsRequired: 1,
+    motionType: 'wave_outward',
+    visualGuide: 'Flat open palm facing forward, slight wave from left to right.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['greet', 'start', 'hi', 'welcome', 'morning']
+  },
+  {
+    id: 'THANK_YOU',
+    name: 'Thank You',
+    category: 'general',
+    spokenText: 'Thank you very much!',
+    description: 'Flat open hand moving outward from chin toward the counter staff.',
+    counterResponse: 'You are very welcome! Is there anything else you need?',
+    serviceContext: 'Polite acknowledgement upon transaction completion',
+    handsRequired: 1,
+    motionType: 'chin_to_forward',
+    visualGuide: 'Fingertips touch near lips/chin, then move forward with palm facing up-inward.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['thanks', 'done', 'appreciate', 'bye']
+  },
+  {
+    id: 'PLEASE',
+    name: 'Please / Kindly',
+    category: 'general',
+    spokenText: 'Please, kindly assist me.',
+    description: 'Flat hand placed over center chest moving in gentle circular motion.',
+    counterResponse: 'Certainly! I am here to help you.',
+    serviceContext: 'Requesting service or attention',
+    handsRequired: 1,
+    motionType: 'chest_circle',
+    visualGuide: 'Flat palm facing chest, circular motion clockwise.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['please', 'kindly', 'request']
+  },
+  {
+    id: 'SORRY',
+    name: 'Sorry / Apologies',
+    category: 'general',
+    spokenText: 'I am sorry / My apologies.',
+    description: 'A-fist rubbing in gentle circular motion over the center of the chest.',
+    counterResponse: 'No worries at all! Everything is alright.',
+    serviceContext: 'Polite correction or apologizing for mistake',
+    handsRequired: 1,
+    motionType: 'chest_circle',
+    visualGuide: 'Make an A-fist with thumb alongside index, rub clockwise circle over chest.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['sorry', 'apology', 'excuse', 'mistake']
+  },
+  {
+    id: 'UNDERSTAND',
+    name: 'I Understand / Clear',
+    category: 'general',
+    spokenText: 'I understand clearly now.',
+    description: 'Fist flicking index finger upward near forehead like a lightbulb turning on.',
+    counterResponse: 'Great! Let us proceed with the next step.',
+    serviceContext: 'Confirming comprehension of service instructions',
+    handsRequired: 1,
+    motionType: 'flick_up',
+    visualGuide: 'Hold closed fist near forehead, flick index finger straight up.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['understand', 'clear', 'know', 'got it']
+  },
+  {
+    id: 'DONT_UNDERSTAND',
+    name: 'Don\'t Understand / Unclear',
+    category: 'general',
+    spokenText: 'I do not understand. Please explain visually.',
+    description: 'Index finger flicking near forehead while shaking head side to side.',
+    counterResponse: 'Let me display a step-by-step visual explanation for you.',
+    serviceContext: 'Requesting simpler visual explanation or clarification',
+    handsRequired: 1,
+    motionType: 'flick_shake',
+    visualGuide: 'Flick index finger near head while waving hand side to side.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['unclear', 'confused', 'dont understand', 'explain']
+  },
+  {
+    id: 'YES',
+    name: 'Yes / Confirm',
+    category: 'general',
+    spokenText: 'Yes, that is correct.',
+    description: 'Closed fist (S-hand) nodding up and down from the wrist like a head nod.',
+    counterResponse: 'Understood. Proceeding with your confirmation.',
+    serviceContext: 'Affirmative response to questions or verification',
+    handsRequired: 1,
+    motionType: 'fist_nod',
+    visualGuide: 'Make a fist with thumb wrapped across fingers, tilt hand up and down.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['yes', 'confirm', 'correct', 'ok', 'agree']
+  },
+  {
+    id: 'NO',
+    name: 'No / Decline',
+    category: 'general',
+    spokenText: 'No, that is incorrect.',
+    description: 'Index and middle fingers extended together and snapping down onto thumb.',
+    counterResponse: 'Noted. We will adjust or cancel this request.',
+    serviceContext: 'Negative response, correction, or declining optional services',
+    handsRequired: 1,
+    motionType: 'pinch_snap',
+    visualGuide: 'Extend index and middle fingers together, tap against thumb repeatedly.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['no', 'cancel', 'decline', 'wrong', 'never']
+  },
+  {
+    id: 'GOOD_OK',
+    name: 'Good / OK / Confirmed',
+    category: 'general',
+    spokenText: 'Everything looks good and confirmed.',
+    description: 'Thumb pointing upward (Thumbs Up) or index touching thumb in O-ring with 3 fingers up (OK).',
+    counterResponse: 'Excellent! Moving to the next step.',
+    serviceContext: 'Satisfaction or approval of transaction details',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Fist with thumb pointing straight up, or OK circle gesture.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['good', 'ok', 'great', 'fine', 'perfect']
+  },
+  {
+    id: 'DEAF_ASSIST',
+    name: 'I am Deaf / Need Visual Aid',
+    category: 'general',
+    spokenText: 'I am Deaf. Please use visual prompts or text.',
+    description: 'Index finger touches near the ear then moves forward to touch near the mouth.',
+    counterResponse: 'Welcome! I have activated high-contrast visual display and screen prompts for you.',
+    serviceContext: 'Informing the counter staff of accessibility preferences',
+    handsRequired: 1,
+    motionType: 'ear_to_mouth',
+    visualGuide: 'Point index finger to ear, then gently move and point to corner of mouth.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['deaf', 'mute', 'sign', 'interpreter', 'assist', 'access']
+  },
+
+  // --- BANK & FINANCIAL SERVICES ---
+  {
+    id: 'ID_CARD',
+    name: 'ID / Identity Document',
+    category: 'financial',
+    spokenText: 'Here is my identity document / ID card.',
+    description: 'Index and thumb forming a rectangle / card shape or flat card swipe on palm.',
+    counterResponse: 'Thank you. Please place your ID card on the scanner tray.',
+    serviceContext: 'Customer identification and KYC verification',
+    handsRequired: 1,
+    motionType: 'card_shape',
+    visualGuide: 'Thumb and index open in L-shape resembling a rectangular ID badge.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['id', 'card', 'passport', 'license', 'identity', 'aadhaar']
+  },
+  {
+    id: 'ACCOUNT_MONEY',
+    name: 'Account / Deposit / Money',
+    category: 'financial',
+    spokenText: 'I would like to access my bank account or deposit money.',
+    description: 'Thumb rubbing index and middle fingertips (money gesture) or flat palm tap.',
+    counterResponse: 'Please enter your account number or slide your debit card.',
+    serviceContext: 'Banking deposit, withdrawal, balance inquiry',
+    handsRequired: 1,
+    motionType: 'money_rub',
+    visualGuide: 'Thumb rubs across index and middle fingertips repeatedly.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['bank', 'money', 'cash', 'account', 'deposit', 'withdraw']
+  },
+  {
+    id: 'COST_PRICE',
+    name: 'How Much / Cost / Fee',
+    category: 'financial',
+    spokenText: 'How much does this cost / What is the fee amount?',
+    description: 'Curved open fingers flicking upward from palm (How Much sign).',
+    counterResponse: 'The standard service fee is displayed on the screen.',
+    serviceContext: 'Inquiring about price, balance, or transaction charges',
+    handsRequired: 1,
+    motionType: 'upward_flick',
+    visualGuide: 'Hold open cupped palm facing upwards, ripple fingertips upward.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['cost', 'price', 'fee', 'how much', 'amount', 'charge']
+  },
+  {
+    id: 'RECEIPT_FEE',
+    name: 'Receipt / Payment Slip',
+    category: 'financial',
+    spokenText: 'I need a printed receipt / invoice for this payment.',
+    description: 'Two hands sliding past each other like tearing or issuing a paper slip.',
+    counterResponse: 'Printing your receipt now. Please collect it from the slot below.',
+    serviceContext: 'Requesting proof of transaction or fee payment voucher',
+    handsRequired: 2,
+    motionType: 'slip_slide',
+    visualGuide: 'Hold flat non-dominant palm up, scrape dominant index/middle along palm forward.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['receipt', 'bill', 'fee', 'slip', 'proof', 'invoice']
+  },
+  {
+    id: 'SIGN_FORM',
+    name: 'Sign Here / Signature',
+    category: 'financial',
+    spokenText: 'I need to sign the document / Where do I sign?',
+    description: 'Dominant hand index and thumb holding imaginary pen signing on flat open non-dominant palm.',
+    counterResponse: 'Please sign on the digital signature pad in front of you.',
+    serviceContext: 'Signing authorization, checks, or application forms',
+    handsRequired: 2,
+    motionType: 'sign_palm',
+    visualGuide: 'Flat non-dominant hand serves as paper; dominant hand writes with pinched fingers.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['sign', 'signature', 'form', 'paper', 'contract', 'authorise']
+  },
+
+  // --- HOSPITAL & HEALTHCARE ---
+  {
+    id: 'DOCTOR_MEDICAL',
+    name: 'Doctor / Medical Help',
+    category: 'medical',
+    spokenText: 'I need to see a doctor or medical officer.',
+    description: 'Bent fingers (M-hand or 3 fingertips) tapping the inner wrist radial pulse.',
+    counterResponse: 'I am routing you to General Physician Room 4. Triage doctor notified.',
+    serviceContext: 'Hospital triage, appointment booking, clinical consultation',
+    handsRequired: 2,
+    motionType: 'pulse_tap',
+    visualGuide: 'Right hand index and middle fingers tap the pulse point of the left wrist.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['doctor', 'nurse', 'medical', 'clinic', 'hospital', 'pain', 'sick']
+  },
+  {
+    id: 'MEDICINE_PHARMACY',
+    name: 'Medicine / Prescription Pharmacy',
+    category: 'medical',
+    spokenText: 'I need my prescription medicine / pharmacy counter.',
+    description: 'Middle fingertip grinding into the center of the open non-dominant palm (mortar and pestle).',
+    counterResponse: 'Pharmacy is located directly at Counter 5. Please show your prescription.',
+    serviceContext: 'Collecting medications or asking for pharmacy desk',
+    handsRequired: 2,
+    motionType: 'grind_palm',
+    visualGuide: 'Rest bent middle finger into the palm of other hand and twist gently.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'HALF', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['medicine', 'pharmacy', 'drug', 'prescription', 'pills']
+  },
+  {
+    id: 'EMERGENCY',
+    name: 'Emergency / Urgent Alert',
+    category: 'emergency',
+    spokenText: 'This is an emergency! Urgent assistance required.',
+    description: 'E-fist hand shaking rapidly or crossed arms flashing in front of chest.',
+    counterResponse: 'Emergency alert sounded! Security and medical response team dispatched to this counter.',
+    serviceContext: 'High priority alert at public facility',
+    handsRequired: 1,
+    motionType: 'rapid_shake',
+    visualGuide: 'Folded fingers in tight E-shape waving side to side urgently.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['emergency', 'urgent', 'danger', 'help', 'sos', 'accident']
+  },
+  {
+    id: 'WATER_RESTROOM',
+    name: 'Water / Restroom / Toilet',
+    category: 'medical',
+    spokenText: 'Where is the drinking water or restroom facility?',
+    description: 'W-hand (3 fingers open) touching lips for water, or T-hand shaking for restroom.',
+    counterResponse: 'The restroom and water station are down the corridor on your right.',
+    serviceContext: 'Public building amenity locator',
+    handsRequired: 1,
+    motionType: 'w_gesture',
+    visualGuide: 'Index, middle, and ring fingers extended upward in W-shape near mouth/chin.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'FOLDED' },
+    scenarioKeywords: ['water', 'drink', 'restroom', 'toilet', 'washroom', 'facility']
+  },
+  {
+    id: 'HELP_ASSIST',
+    name: 'Help / Assistance',
+    category: 'general',
+    spokenText: 'I need help and guidance.',
+    description: 'Dominant fist with thumb up resting on flat non-dominant palm, both lifting together.',
+    counterResponse: 'How may I guide you? I am ready to assist.',
+    serviceContext: 'General counter assistance request',
+    handsRequired: 2,
+    motionType: 'lift_palm',
+    visualGuide: 'Place thumbs-up right fist on flat left palm, lift both upward gently.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['help', 'assist', 'guide', 'support', 'lost']
+  },
+
+  // --- GOVERNMENT & CIVIC SERVICES ---
+  {
+    id: 'POLICE_SECURITY',
+    name: 'Police / Security Officer',
+    category: 'civic',
+    spokenText: 'I need to speak with police or security.',
+    description: 'C-shaped curved hand tapping over the left chest where a badge is worn.',
+    counterResponse: 'Duty security officer has been paged to counter desk.',
+    serviceContext: 'Civic safety, lost items, security verification',
+    handsRequired: 1,
+    motionType: 'badge_tap',
+    visualGuide: 'Curved thumb and fingers in C-shape tap twice on left chest badge position.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['police', 'cop', 'security', 'guard', 'theft', 'lost']
+  },
+  {
+    id: 'LOCATION_ADDRESS',
+    name: 'Location / Address / Where',
+    category: 'civic',
+    spokenText: 'What is the address / Where is this office located?',
+    description: 'Index finger pointing forward shaking slightly in circular inquiry.',
+    counterResponse: 'The location map and building room number are shown on the screen.',
+    serviceContext: 'Directions and office location inquiry',
+    handsRequired: 1,
+    motionType: 'circle_point',
+    visualGuide: 'Hold open palms up, move hands side to side with questioning expression.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['where', 'location', 'address', 'place', 'map']
+  },
+  {
+    id: 'WAIT_STOP',
+    name: 'Wait / Please Hold',
+    category: 'civic',
+    spokenText: 'Please wait a moment / Stop.',
+    description: 'Flat open hand pushed forward toward counter, palm facing forward.',
+    counterResponse: 'Standing by. Take your time, no rush at all.',
+    serviceContext: 'Pausing an interaction or asking staff to hold',
+    handsRequired: 1,
+    motionType: 'push_palm',
+    visualGuide: 'Raise flat open palm facing directly forward at chest height.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['wait', 'hold', 'stop', 'pause', 'moment']
+  },
+  {
+    id: 'REPEAT_AGAIN',
+    name: 'Repeat / Once More',
+    category: 'civic',
+    spokenText: 'Please repeat that instruction again.',
+    description: 'Bent right hand arc diving into open flat left palm.',
+    counterResponse: 'Replaying and showing the previous instruction again.',
+    serviceContext: 'Clarification of service instructions',
+    handsRequired: 2,
+    motionType: 'arc_tap',
+    visualGuide: 'Bent cupped dominant hand arcs over and lands into the palm of the flat other hand.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['repeat', 'again', 'replay', 'what', 'clarify']
+  },
+  {
+    id: 'PHONE_CALL',
+    name: 'Phone / Call Contact',
+    category: 'civic',
+    spokenText: 'Please call my emergency contact / phone number.',
+    description: 'Y-hand (thumb and pinky extended) placed near ear and mouth like a telephone handset.',
+    counterResponse: 'Dialing your contact number on the desk speaker phone.',
+    serviceContext: 'Contacting relatives or representative',
+    handsRequired: 1,
+    motionType: 'phone_pose',
+    visualGuide: 'Extend thumb and pinky outwards (Y-sign), hold to ear like phone receiver.',
+    keyFingerStates: { thumb: 'OPEN', index: 'FOLDED', middle: 'FOLDED', ring: 'FOLDED', pinky: 'OPEN' },
+    scenarioKeywords: ['phone', 'call', 'contact', 'telephone', 'mobile']
+  },
+
+  // --- NUMBERS ---
+  {
+    id: 'NUMBER_1',
+    name: 'Number 1 (One)',
+    category: 'numbers',
+    spokenText: 'Number 1',
+    description: 'Index finger pointing straight up, other fingers and thumb closed.',
+    counterResponse: 'Option 1 selected.',
+    serviceContext: 'Selecting menu options, counting documents, token numbers',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Index finger pointing vertical, all other fingers closed into fist.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['1', 'one', 'first']
+  },
+  {
+    id: 'NUMBER_2',
+    name: 'Number 2 (Two)',
+    category: 'numbers',
+    spokenText: 'Number 2',
+    description: 'Index and middle fingers extended upward in V-shape.',
+    counterResponse: 'Option 2 selected.',
+    serviceContext: 'Counting two items, selecting option 2',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Index and middle fingers spread apart in V-shape pointing up.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['2', 'two', 'second']
+  },
+  {
+    id: 'NUMBER_3',
+    name: 'Number 3 (Three)',
+    category: 'numbers',
+    spokenText: 'Number 3',
+    description: 'Thumb, index, and middle fingers extended (ASL 3).',
+    counterResponse: 'Option 3 selected.',
+    serviceContext: 'Counting three items, selecting option 3',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend thumb, index, and middle fingers outward.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'FOLDED', pinky: 'FOLDED' },
+    scenarioKeywords: ['3', 'three', 'third']
+  },
+  {
+    id: 'NUMBER_4',
+    name: 'Number 4 (Four)',
+    category: 'numbers',
+    spokenText: 'Number 4',
+    description: 'Four fingers (index, middle, ring, pinky) extended upward with thumb folded.',
+    counterResponse: 'Option 4 selected.',
+    serviceContext: 'Counting four items, selecting option 4',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'All four fingers extended straight up, thumb tucked across palm.',
+    keyFingerStates: { thumb: 'FOLDED', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['4', 'four', 'fourth']
+  },
+  {
+    id: 'NUMBER_5',
+    name: 'Number 5 (Five)',
+    category: 'numbers',
+    spokenText: 'Number 5',
+    description: 'All five fingers spread wide open facing forward.',
+    counterResponse: 'Option 5 selected.',
+    serviceContext: 'Counting five items, high-five, option 5',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Open palm with all five fingers spread wide.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+    scenarioKeywords: ['5', 'five', 'fifth']
+  },
+  {
+    id: 'SIGN_ILY',
+    name: 'I Love You (ILY)',
+    category: 'general',
+    spokenText: 'I love you / Warm regards!',
+    description: 'Thumb, index finger, and pinky finger extended, middle and ring folded.',
+    counterResponse: 'Warm regards to you as well!',
+    serviceContext: 'Affectionate or universal sign of gratitude and goodwill',
+    handsRequired: 1,
+    motionType: 'static_pose',
+    visualGuide: 'Extend thumb, index finger, and pinky finger simultaneously.',
+    keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'FOLDED', ring: 'FOLDED', pinky: 'OPEN' },
+    scenarioKeywords: ['ily', 'love', 'gratitude']
+  }
+];
+
+// Combine Base Vocabulary with all 61 Dataset Videos
+const vocabularyMap = new Map();
+
+// 1. Add base vocabulary (ASL alphabet + service signs)
+BASE_VOCABULARY.forEach(item => {
+  const matchVideo = VIDEO_DATASET_REGISTRY.find(v => v.id === item.id || v.id === item.id.replace('SIGN_', ''));
+  vocabularyMap.set(item.id, {
+    ...item,
+    videoPath: matchVideo ? matchVideo.videoPath : (item.videoPath || null)
+  });
+});
+
+// 2. Add all remaining items from VIDEO_DATASET_REGISTRY
+VIDEO_DATASET_REGISTRY.forEach(videoItem => {
+  const existing = vocabularyMap.get(videoItem.id) || Array.from(vocabularyMap.values()).find(v => v.id === `SIGN_${videoItem.id}` || v.name.toLowerCase() === videoItem.label.toLowerCase());
+  if (existing) {
+    existing.videoPath = videoItem.videoPath;
+    if (!existing.counterResponse && videoItem.counterResponse) {
+      existing.counterResponse = videoItem.counterResponse;
+    }
+  } else {
+    vocabularyMap.set(videoItem.id, {
+      id: videoItem.id,
+      name: videoItem.label,
+      category: videoItem.category || 'general',
+      spokenText: videoItem.spokenText || videoItem.label,
+      description: `Sign gesture for "${videoItem.label}". Standard dataset gesture clip.`,
+      counterResponse: videoItem.counterResponse || `Acknowledged ${videoItem.label}.`,
+      serviceContext: `Public service interaction for ${videoItem.label}`,
+      handsRequired: 1,
+      motionType: 'dynamic_gesture',
+      videoPath: videoItem.videoPath,
+      visualGuide: `Perform natural gesture for "${videoItem.label}" facing camera.`,
+      keyFingerStates: { thumb: 'OPEN', index: 'OPEN', middle: 'OPEN', ring: 'OPEN', pinky: 'OPEN' },
+      scenarioKeywords: [videoItem.label.toLowerCase(), videoItem.id.toLowerCase()]
+    });
+  }
+});
+
+export const VOCABULARY = Array.from(vocabularyMap.values());
+
+
+export const SERVICE_SCENARIOS = {
+  BANK: {
+    id: 'bank',
+    name: 'Bank Teller Counter',
+    description: 'Financial transactions, deposits, card issuance, KYC authentication',
+    icon: 'landmark',
+    accentColor: '#10b981',
+    quickStaffReplies: [
+      { text: 'Welcome to Central Bank! How may I assist your account today?', signId: 'HELLO' },
+      { text: 'Please present your government photo ID card for verification.', signId: 'ID_CARD' },
+      { text: 'Please enter your 4-digit PIN on the terminal keypad.', signId: 'NUMBER_4' },
+      { text: 'Please sign on the digital signature pad.', signId: 'SIGN_FORM' },
+      { text: 'Deposit completed successfully. Here is your receipt.', signId: 'RECEIPT_FEE' },
+      { text: 'Please wait one moment while the transaction processes.', signId: 'WAIT_STOP' },
+      { text: 'Thank you for banking with us today!', signId: 'THANK_YOU' }
+    ],
+    sampleDialogue: [
+      { sender: 'staff', text: 'Welcome to Central Bank! Please show your ID card.', signId: 'ID_CARD' },
+      { sender: 'customer', signId: 'ID_CARD', text: 'Here is my identity document / ID card.' },
+      { sender: 'staff', text: 'Thank you. Would you like to make a deposit into your account?', signId: 'ACCOUNT_MONEY' },
+      { sender: 'customer', signId: 'YES', text: 'Yes, that is correct.' },
+      { sender: 'staff', text: 'Please sign here on the counter pad.', signId: 'SIGN_FORM' },
+      { sender: 'customer', signId: 'SIGN_FORM', text: 'I need to sign the document / Where do I sign?' },
+      { sender: 'customer', signId: 'RECEIPT_FEE', text: 'I need a printed receipt / invoice for this payment.' },
+      { sender: 'staff', text: 'Here is your official receipt. Thank you!', signId: 'THANK_YOU' },
+      { sender: 'customer', signId: 'THANK_YOU', text: 'Thank you very much!' }
+    ]
+  },
+  HOSPITAL: {
+    id: 'hospital',
+    name: 'Hospital Reception & Triage',
+    description: 'Emergency check-in, triage priority, doctor appointments, pharmacy',
+    icon: 'cross',
+    accentColor: '#ef4444',
+    quickStaffReplies: [
+      { text: 'Welcome to City General Hospital triage. How are you feeling?', signId: 'HELLO' },
+      { text: 'I am assigning you immediately to the Duty Medical Doctor.', signId: 'DOCTOR_MEDICAL' },
+      { text: 'Is this an urgent emergency?', signId: 'EMERGENCY' },
+      { text: 'Drinking water and restrooms are directly down corridor B.', signId: 'WATER_RESTROOM' },
+      { text: 'Please collect your medication at the pharmacy counter.', signId: 'MEDICINE_PHARMACY' },
+      { text: 'Please wait in Bay 3, the nurse will call you shortly.', signId: 'WAIT_STOP' },
+      { text: 'We are here to help you get well.', signId: 'HELP_ASSIST' }
+    ],
+    sampleDialogue: [
+      { sender: 'customer', signId: 'DEAF_ASSIST', text: 'I am Deaf. Please use visual prompts or text.' },
+      { sender: 'staff', text: 'Welcome! Visual assistance activated. How can we help you?', signId: 'HELP_ASSIST' },
+      { sender: 'customer', signId: 'DOCTOR_MEDICAL', text: 'I need to see a doctor or medical officer.' },
+      { sender: 'staff', text: 'Understood. Is this an urgent emergency or general appointment?', signId: 'EMERGENCY' },
+      { sender: 'customer', signId: 'YES', text: 'Yes, this is urgent.' },
+      { sender: 'staff', text: 'Priority triage assigned. Please take a seat in Room 1.', signId: 'WAIT_STOP' },
+      { sender: 'customer', signId: 'THANK_YOU', text: 'Thank you very much!' }
+    ]
+  },
+  GOVERNMENT: {
+    id: 'government',
+    name: 'Civic & Government Services',
+    description: 'Passport, licenses, certificates, public complaints, welfare schemes',
+    icon: 'briefcase',
+    accentColor: '#f59e0b',
+    quickStaffReplies: [
+      { text: 'Welcome to Civic Services Center. Which permit do you need?', signId: 'HELLO' },
+      { text: 'Please provide your original ID document.', signId: 'ID_CARD' },
+      { text: 'Please affix your signature on page 2 of this form.', signId: 'SIGN_FORM' },
+      { text: 'Please pay the application fee at Counter 4.', signId: 'RECEIPT_FEE' },
+      { text: 'Security desk will verify your application packet.', signId: 'POLICE_SECURITY' },
+      { text: 'Please wait while we stamp and authenticate your certificate.', signId: 'WAIT_STOP' },
+      { text: 'Application approved and submitted successfully!', signId: 'GOOD_OK' }
+    ],
+    sampleDialogue: [
+      { sender: 'staff', text: 'Good morning! Please provide your application form and ID.', signId: 'ID_CARD' },
+      { sender: 'customer', signId: 'ID_CARD', text: 'Here is my identity document / ID card.' },
+      { sender: 'staff', text: 'Thank you. Please sign the bottom acknowledgment.', signId: 'SIGN_FORM' },
+      { sender: 'customer', signId: 'SIGN_FORM', text: 'Signed form completed.' },
+      { sender: 'customer', signId: 'RECEIPT_FEE', text: 'I need a printed receipt / invoice for this payment.' },
+      { sender: 'staff', text: 'Here is your official stamped receipt and tracking number.', signId: 'RECEIPT_FEE' },
+      { sender: 'customer', signId: 'GOOD_OK', text: 'Everything looks good and confirmed.' }
+    ]
+  }
+};
