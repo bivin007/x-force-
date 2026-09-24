@@ -31,6 +31,21 @@ export function renderAppLayout(rootElement) {
           </div>
         </div>
 
+        <!-- VIEW SWITCHER: DUAL-COUNTER DESK VS GESTURE-TO-SENTENCE STUDIO -->
+        <div class="header-view-toggle">
+          <div class="view-pill-group">
+            <button class="view-tab-btn active" id="tab-btn-counter" data-view="counter" title="Public Service Counter Desk Dual-Screen Interface">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Service Counter Desk</span>
+            </button>
+            <button class="view-tab-btn" id="tab-btn-studio" data-view="studio" title="Interactive Gesture-to-Sentence Builder & AI Studio">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <span>Gesture-to-Sentence Studio</span>
+              <span class="studio-tab-badge">STUDIO</span>
+            </button>
+          </div>
+        </div>
+
         <!-- RECOGNITION MODE SELECTOR -->
         <div class="header-mode-toggle">
           <span class="mode-label">Mode:</span>
@@ -75,7 +90,7 @@ export function renderAppLayout(rootElement) {
       </header>
 
       <!-- SUB-HEADER BAR: DATASET STREAM EVALUATOR & SCENARIOS -->
-      <div class="sub-header-bar">
+      <div class="sub-header-bar" id="sub-header-bar">
         <div class="dataset-stream-selector-wrap">
           <span class="stream-label">🎬 Dataset Video Stream Evaluator:</span>
           <select id="select-dataset-video" class="dataset-dropdown" aria-label="Select sample video from 61-class dataset">
@@ -162,393 +177,663 @@ export function renderAppLayout(rootElement) {
         </div>
       </div>
 
-      <!-- MAIN WORKSPACE: DUAL-COUNTER BRIDGE -->
-      <main class="main-bridge-grid" id="main-bridge-grid">
-        
-        <!-- LEFT COLUMN: VISITOR SIGN LANGUAGE RECOGNITION (GESTURE-TO-TEXT/SPEECH) -->
-        <section class="counter-panel visitor-panel" aria-label="Deaf Visitor Sign Language Camera Feed">
-          <div class="panel-header">
-            <div class="panel-title-group">
-              <span class="panel-badge-visitor">DEAF VISITOR INTERFACE</span>
-              <h2 class="panel-title">Real-Time Gesture Vision Engine</h2>
-            </div>
-            
-            <div class="camera-actions">
-              <button id="btn-camera-toggle" class="btn-camera-toggle" aria-label="Start Camera">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                <span id="camera-btn-text">Start Camera</span>
-              </button>
-              <button id="btn-synthetic-toggle" class="btn-sim-toggle" title="Cycle synthetic sign">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
-                <span>Cycle Sign</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- VIDEO FEED CONTAINER -->
-          <div class="video-container" id="video-container">
-            <video id="webcam-video" class="hidden-video" playsinline muted></video>
-            <canvas id="landmark-canvas" width="640" height="420" class="vision-canvas"></canvas>
-
-            <!-- Video Overlay HUD -->
-            <div class="vision-hud-overlay">
-              <div class="hud-top-row">
-                <div class="hud-metric">
-                  <span class="hud-label">LATENCY</span>
-                  <span class="hud-val" id="hud-latency">0 ms</span>
-                </div>
-                <div class="hud-metric">
-                  <span class="hud-label">FRAME RATE</span>
-                  <span class="hud-val" id="hud-fps">30 FPS</span>
-                </div>
-                <div class="hud-metric">
-                  <span class="hud-label">HANDS</span>
-                  <span class="hud-val" id="hud-hands">0</span>
-                </div>
-                <div class="hud-metric" id="hud-video-badge" style="display: none;">
-                  <span class="hud-label">INPUT STREAM</span>
-                  <span class="hud-val" style="color: #ec4899;">DATASET MP4</span>
-                </div>
-              </div>
-
-              <!-- Quick Background & Lighting Bar -->
-              <div class="hud-bottom-bar">
-                <div class="filter-pill-selector">
-                  <span class="filter-title">Environment:</span>
-                  <select id="select-bg-preset" class="hud-select" aria-label="Select Virtual Background Environment">
-                    <option value="real">Real Camera Feed</option>
-                    <option value="bank">Bank Counter Background</option>
-                    <option value="hospital">Hospital Corridor Background</option>
-                    <option value="government">Govt Desk Background</option>
-                    <option value="noise">Noise / Public Clutter</option>
-                    <option value="blur">Bokeh Blur Background</option>
-                  </select>
-
-                  <select id="select-light-preset" class="hud-select" aria-label="Select Lighting Condition">
-                    <option value="normal">Normal Lighting</option>
-                    <option value="low_light">Low-Light Boost (+Gamma)</option>
-                    <option value="high_contrast">High Contrast Filter</option>
-                    <option value="overexposed">Backlight / Glare</option>
-                    <option value="edge_boost">Edge Enhancement</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- DATASET STREAM CONTROL BAR (Active when streaming dataset videos) -->
-          <div class="dataset-stream-controls-card" id="dataset-stream-controls" style="display: none;">
-            <div class="stream-info-left">
-              <span class="stream-active-icon">🎬</span>
-              <div class="stream-title-wrap">
-                <span class="stream-playing-title" id="stream-playing-title">Playing: Hello</span>
-                <span class="stream-playing-sub" id="stream-playing-sub">Greetings & Social • 61-Class Video Dataset</span>
-              </div>
-            </div>
-            <div class="stream-actions-center">
-              <button id="btn-stream-prev" class="btn-stream-ctrl" title="Previous Dataset Video">⏮ Prev</button>
-              <button id="btn-stream-pause" class="btn-stream-ctrl" title="Play / Pause">⏸ Pause</button>
-              <button id="btn-stream-next" class="btn-stream-ctrl" title="Next Dataset Video">Next ⏭</button>
-              <div class="stream-speed-pills">
-                <button class="btn-stream-spd" data-spd="0.5">0.5x</button>
-                <button class="btn-stream-spd active" data-spd="1.0">1.0x</button>
-                <button class="btn-stream-spd" data-spd="1.5">1.5x</button>
-              </div>
-            </div>
-            <div class="stream-actions-right">
-              <button id="btn-stream-details-quick" class="btn-stream-details-pill" title="View Full Translation & Keypoints">ℹ️ Dataset Info</button>
-            </div>
-          </div>
-
-          <!-- ASL FINGERSPELLING LIVE WORD COMPOSER BAR -->
-          <div class="asl-word-composer-card" id="asl-composer-card">
-            <div class="composer-header">
-              <div class="composer-title-wrap">
-                <span class="composer-badge">ASL LIVE WORD COMPOSER</span>
-                <span class="composer-hint">Fingerspell letters into live text</span>
-                <span class="composer-gesture-tag" title="Swipe hand right for Space, swipe left for Backspace">
-                  🖐️ <strong>Swipe ➔</strong> Space | 👈 <strong>Swipe ⬅</strong> Backspace
-                </span>
-              </div>
-              <div class="composer-actions">
-                <button id="btn-composer-space" class="btn-composer-tool" title="Add Space (or Swipe Hand ➔ Right)">␣ Space <span class="kbd-pill">Hand ➔</span></button>
-                <button id="btn-composer-backspace" class="btn-composer-tool" title="Delete Last Letter (or Swipe Hand ⬅ Left / Thumbs-Left)">⌫ Backspace <span class="kbd-pill">Hand ⬅</span></button>
-                <button id="btn-composer-clear" class="btn-composer-tool" title="Clear All">Clear</button>
-                <button id="btn-composer-speak" class="btn-composer-speak" title="Speak Word Aloud">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                  Speak Word
-                </button>
-              </div>
-            </div>
-            <div class="composer-display">
-              <span id="composer-spelled-text" class="spelled-text-placeholder">Fingerspell letters (A-Z) to build words here...</span>
-            </div>
-          </div>
-
-          <!-- RECOGNITION OUTPUT CARD -->
-          <div class="recognition-output-card" id="recognition-card">
-            <div class="recog-status-row">
-              <div class="recog-badge-live">
-                <span class="pulse-indicator"></span>
-                <span id="recog-mode-badge">LIVE VISION INFERENCE</span>
-              </div>
-              <div class="confidence-gauge-wrapper">
-                <span class="confidence-label">Confidence:</span>
-                <span class="confidence-number" id="confidence-val">0%</span>
-                <div class="confidence-bar-bg">
-                  <div class="confidence-bar-fill" id="confidence-bar" style="width: 0%;"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- PRIMARY TRANSLATION TEXT -->
-            <div class="primary-translation-box">
-              <div class="translation-meta">
-                <span class="meta-label">RECOGNIZED SIGN / VIDEO CLASS:</span>
-                <span class="active-sign-id" id="active-sign-name">Scanning Stream...</span>
-              </div>
-              <h3 class="translated-spoken-text" id="active-spoken-text">
-                "Hold hand in view or click Play Video Stream from dataset."
-              </h3>
-            </div>
-
-            <!-- TOP-3 PREDICTIONS & FINGER HUD -->
-            <div class="recog-telemetry-grid">
-              <div class="top-predictions-box">
-                <span class="telemetry-label">Hypotheses:</span>
-                <div class="top-predictions-list" id="top-predictions-list">
-                  <span class="pred-item muted">Standby</span>
-                </div>
+      <!-- VIEW 1: DUAL-COUNTER SERVICE DESK WORKSPACE -->
+      <div class="workspace-view active" id="view-counter-desk">
+        <main class="main-bridge-grid" id="main-bridge-grid">
+          
+          <!-- LEFT COLUMN: VISITOR SIGN LANGUAGE RECOGNITION (GESTURE-TO-TEXT/SPEECH) -->
+          <section class="counter-panel visitor-panel" aria-label="Deaf Visitor Sign Language Camera Feed">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-badge-visitor">DEAF VISITOR INTERFACE</span>
+                <h2 class="panel-title">Real-Time Gesture Vision Engine</h2>
               </div>
               
-              <div class="finger-status-box">
-                <span class="telemetry-label">Finger States:</span>
-                <div class="finger-indicators" id="finger-indicators">
-                  <span class="finger-dot" title="Thumb">T</span>
-                  <span class="finger-dot" title="Index">I</span>
-                  <span class="finger-dot" title="Middle">M</span>
-                  <span class="finger-dot" title="Ring">R</span>
-                  <span class="finger-dot" title="Pinky">P</span>
+              <div class="camera-actions">
+                <button id="btn-camera-toggle" class="btn-camera-toggle" aria-label="Start Camera">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                  <span id="camera-btn-text">Start Camera</span>
+                </button>
+                <button id="btn-synthetic-toggle" class="btn-sim-toggle" title="Cycle synthetic sign">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+                  <span>Cycle Sign</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- VIDEO FEED CONTAINER -->
+            <div class="video-container" id="video-container">
+              <video id="webcam-video" class="hidden-video" playsinline muted></video>
+              <canvas id="landmark-canvas" width="640" height="420" class="vision-canvas"></canvas>
+
+              <!-- Video Overlay HUD -->
+              <div class="vision-hud-overlay">
+                <div class="hud-top-row">
+                  <div class="hud-metric">
+                    <span class="hud-label">LATENCY</span>
+                    <span class="hud-val" id="hud-latency">0 ms</span>
+                  </div>
+                  <div class="hud-metric">
+                    <span class="hud-label">FRAME RATE</span>
+                    <span class="hud-val" id="hud-fps">30 FPS</span>
+                  </div>
+                  <div class="hud-metric">
+                    <span class="hud-label">HANDS</span>
+                    <span class="hud-val" id="hud-hands">0</span>
+                  </div>
+                  <div class="hud-metric" id="hud-video-badge" style="display: none;">
+                    <span class="hud-label">INPUT STREAM</span>
+                    <span class="hud-val" style="color: #ec4899;">DATASET MP4</span>
+                  </div>
+                </div>
+
+                <!-- Quick Background & Lighting Bar -->
+                <div class="hud-bottom-bar">
+                  <div class="filter-pill-selector">
+                    <span class="filter-title">Environment:</span>
+                    <select id="select-bg-preset" class="hud-select" aria-label="Select Virtual Background Environment">
+                      <option value="real">Real Camera Feed</option>
+                      <option value="bank">Bank Counter Background</option>
+                      <option value="hospital">Hospital Corridor Background</option>
+                      <option value="government">Govt Desk Background</option>
+                      <option value="noise">Noise / Public Clutter</option>
+                      <option value="blur">Bokeh Blur Background</option>
+                    </select>
+
+                    <select id="select-light-preset" class="hud-select" aria-label="Select Lighting Condition">
+                      <option value="normal">Normal Lighting</option>
+                      <option value="low_light">Low-Light Boost (+Gamma)</option>
+                      <option value="high_contrast">High Contrast Filter</option>
+                      <option value="overexposed">Backlight / Glare</option>
+                      <option value="edge_boost">Edge Enhancement</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- AUDIO TTS STATUS BAR -->
-            <div class="tts-status-bar">
-              <div class="tts-left">
-                <button id="btn-audio-toggle" class="btn-tts-toggle active" title="Toggle Spoken Voice Output">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-speaker"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                  <span>Auto-Speak (TTS Active)</span>
-                </button>
-                <button id="btn-replay-tts" class="btn-replay-tts" title="Replay Last Translation">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-                  Replay Voice
-                </button>
-              </div>
-              <canvas id="tts-audio-waveform" width="120" height="24" class="waveform-mini"></canvas>
-            </div>
-          </div>
-
-          <!-- 4-STAGE MULTI-MODAL PIPELINE CARD -->
-          <div class="pipeline-card" id="pipeline-card">
-            <div class="pipeline-card-header">
-              <div class="pipeline-card-title-group">
-                <span class="pipeline-card-badge">4-STAGE PIPELINE</span>
-                <h3 class="pipeline-card-title">Sign ➔ Sentence AI ➔ Multilingual ➔ Speech</h3>
-              </div>
-              <div class="pipeline-header-controls">
-                <label class="toggle-switch-label" title="Automatically form sentences when gesture sequence finishes">
-                  <input type="checkbox" id="toggle-auto-sentence" checked />
-                  <span class="toggle-slider"></span>
-                  <span class="toggle-text">Auto-Synthesize</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- STAGE 1: SIGN TOKEN SEQUENCE BUFFER -->
-            <div class="stage-section stage-1-section">
-              <div class="stage-header-row">
-                <div class="stage-tag">
-                  <span class="stage-number-chip stage-chip-1">Stage 1</span>
-                  <span class="stage-name">Recognized Sign Tokens:</span>
+            <!-- DATASET STREAM CONTROL BAR (Active when streaming dataset videos) -->
+            <div class="dataset-stream-controls-card" id="dataset-stream-controls" style="display: none;">
+              <div class="stream-info-left">
+                <span class="stream-active-icon">🎬</span>
+                <div class="stream-title-wrap">
+                  <span class="stream-playing-title" id="stream-playing-title">Playing: Hello</span>
+                  <span class="stream-playing-sub" id="stream-playing-sub">Greetings & Social • 61-Class Video Dataset</span>
                 </div>
-                <div class="stage-tools">
-                  <button id="btn-clear-tokens" class="btn-tool-xs" title="Clear Token Queue">⌫ Clear</button>
-                  <button id="btn-generate-sentence" class="btn-synthesize-action" title="Synthesize tokens into grammatical sentence now">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    Form Sentence (Stage 2)
+              </div>
+              <div class="stream-actions-center">
+                <button id="btn-stream-prev" class="btn-stream-ctrl" title="Previous Dataset Video">⏮ Prev</button>
+                <button id="btn-stream-pause" class="btn-stream-ctrl" title="Play / Pause">⏸ Pause</button>
+                <button id="btn-stream-next" class="btn-stream-ctrl" title="Next Dataset Video">Next ⏭</button>
+                <div class="stream-speed-pills">
+                  <button class="btn-stream-spd" data-spd="0.5">0.5x</button>
+                  <button class="btn-stream-spd active" data-spd="1.0">1.0x</button>
+                  <button class="btn-stream-spd" data-spd="1.5">1.5x</button>
+                </div>
+              </div>
+              <div class="stream-actions-right">
+                <button id="btn-stream-details-quick" class="btn-stream-details-pill" title="View Full Translation & Keypoints">ℹ️ Dataset Info</button>
+              </div>
+            </div>
+
+            <!-- ASL FINGERSPELLING LIVE WORD COMPOSER BAR -->
+            <div class="asl-word-composer-card" id="asl-composer-card">
+              <div class="composer-header">
+                <div class="composer-title-wrap">
+                  <span class="composer-badge">ASL LIVE WORD COMPOSER</span>
+                  <span class="composer-hint">Fingerspell letters into live text</span>
+                  <span class="composer-gesture-tag" title="Swipe hand right for Space, swipe left for Backspace">
+                    🖐️ <strong>Swipe ➔</strong> Space | 👈 <strong>Swipe ⬅</strong> Backspace
+                  </span>
+                </div>
+                <div class="composer-actions">
+                  <button id="btn-composer-space" class="btn-composer-tool" title="Add Space (or Swipe Hand ➔ Right)">␣ Space <span class="kbd-pill">Hand ➔</span></button>
+                  <button id="btn-composer-backspace" class="btn-composer-tool" title="Delete Last Letter (or Swipe Hand ⬅ Left / Thumbs-Left)">⌫ Backspace <span class="kbd-pill">Hand ⬅</span></button>
+                  <button id="btn-composer-clear" class="btn-composer-tool" title="Clear All">Clear</button>
+                  <button id="btn-composer-speak" class="btn-composer-speak" title="Speak Word Aloud">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    Speak Word
                   </button>
                 </div>
               </div>
-
-              <!-- Active Token Chips Display -->
-              <div class="token-chips-container" id="token-chips-container">
-                <span class="token-chip-placeholder">Recognized gesture signs will buffer here (e.g. [I] + [FEVER])...</span>
-              </div>
-
-              <!-- Quick Token Add Simulation Pills for instant testing -->
-              <div class="token-quick-adder-row">
-                <span class="quick-token-label">Quick Concept Add:</span>
-                <div class="token-quick-chips">
-                  <button class="btn-quick-token" data-token="I">+ I</button>
-                  <button class="btn-quick-token" data-token="FEVER">+ Fever</button>
-                  <button class="btn-quick-token" data-token="NEED">+ Need</button>
-                  <button class="btn-quick-token" data-token="DOCTOR">+ Doctor</button>
-                  <button class="btn-quick-token" data-token="ACCOUNT">+ Account</button>
-                  <button class="btn-quick-token" data-token="DEPOSIT">+ Deposit</button>
-                  <button class="btn-quick-token" data-token="HELP">+ Help</button>
-                  <button class="btn-quick-token" data-token="THANK_YOU">+ Thank You</button>
-                </div>
+              <div class="composer-display">
+                <span id="composer-spelled-text" class="spelled-text-placeholder">Fingerspell letters (A-Z) to build words here...</span>
               </div>
             </div>
 
-            <!-- STAGE 2: GRAMMAR SENTENCE FORMATION -->
-            <div class="stage-section stage-2-section">
-              <div class="stage-header-row">
-                <div class="stage-tag">
-                  <span class="stage-number-chip stage-chip-2">Stage 2</span>
-                  <span class="stage-name">Grammatically Meaningful Sentence:</span>
+            <!-- RECOGNITION OUTPUT CARD -->
+            <div class="recognition-output-card" id="recognition-card">
+              <div class="recog-status-row">
+                <div class="recog-badge-live">
+                  <span class="pulse-indicator"></span>
+                  <span id="recog-mode-badge">LIVE VISION INFERENCE</span>
                 </div>
-                <span class="grammar-confidence-badge" id="grammar-confidence-badge">Grammar AI Ready</span>
-              </div>
-              <div class="formed-sentence-box">
-                <p class="formed-sentence-text" id="formed-sentence-text">
-                  "I have a fever and need a medical checkup."
-                </p>
-              </div>
-            </div>
-
-            <!-- STAGE 3: MULTILINGUAL TRANSLATION (Tamil, Hindi, Telugu, Kannada, Malayalam, English) -->
-            <div class="stage-section stage-3-section">
-              <div class="stage-header-row">
-                <div class="stage-tag">
-                  <span class="stage-number-chip stage-chip-3">Stage 3</span>
-                  <span class="stage-name">Multilingual Translation:</span>
+                <div class="confidence-gauge-wrapper">
+                  <span class="confidence-label">Confidence:</span>
+                  <span class="confidence-number" id="confidence-val">0%</span>
+                  <div class="confidence-bar-bg">
+                    <div class="confidence-bar-fill" id="confidence-bar" style="width: 0%;"></div>
+                  </div>
                 </div>
-              </div>
-              
-              <!-- Language Selector Tabs -->
-              <div class="lang-selector-pills" id="lang-selector-pills">
-                <button class="lang-pill active" data-lang="ta" title="Tamil (தமிழ்)">
-                  <span class="lang-flag">🇮🇳</span> <span class="lang-text">தமிழ் (Tamil)</span>
-                </button>
-                <button class="lang-pill" data-lang="hi" title="Hindi (हिन्दी)">
-                  <span class="lang-flag">🇮🇳</span> <span class="lang-text">हिन्दी (Hindi)</span>
-                </button>
-                <button class="lang-pill" data-lang="te" title="Telugu (తెలుగు)">
-                  <span class="lang-flag">🇮🇳</span> <span class="lang-text">తెలుగు (Telugu)</span>
-                </button>
-                <button class="lang-pill" data-lang="kn" title="Kannada (ಕನ್ನಡ)">
-                  <span class="lang-flag">🇮🇳</span> <span class="lang-text">ಕನ್ನಡ (Kannada)</span>
-                </button>
-                <button class="lang-pill" data-lang="ml" title="Malayalam (മലയാളം)">
-                  <span class="lang-flag">🇮🇳</span> <span class="lang-text">മലയാളം (Malayalam)</span>
-                </button>
-                <button class="lang-pill" data-lang="en" title="English">
-                  <span class="lang-flag">🇬🇧</span> <span class="lang-text">English</span>
-                </button>
               </div>
 
-              <!-- Translated Text Display with Large Native Script -->
-              <div class="translated-output-box">
-                <div class="translated-meta-row">
-                  <span class="target-lang-label" id="target-lang-label">Tamil (தமிழ் • ta-IN):</span>
-                  <span class="translation-mode-indicator">Dictionary + Indic Lexicon</span>
+              <!-- PRIMARY TRANSLATION TEXT -->
+              <div class="primary-translation-box">
+                <div class="translation-meta">
+                  <span class="meta-label">RECOGNIZED SIGN / VIDEO CLASS:</span>
+                  <span class="active-sign-id" id="active-sign-name">Scanning Stream...</span>
                 </div>
-                <h3 class="translated-output-text" id="translated-output-text">
-                  "எனக்கு காய்ச்சல் உள்ளது, மருத்துவ பரிசோதனை தேவை."
+                <h3 class="translated-spoken-text" id="active-spoken-text">
+                  "Hold hand in view or click Play Video Stream from dataset."
                 </h3>
               </div>
+
+              <!-- TOP-3 PREDICTIONS & FINGER HUD -->
+              <div class="recog-telemetry-grid">
+                <div class="top-predictions-box">
+                  <span class="telemetry-label">Hypotheses:</span>
+                  <div class="top-predictions-list" id="top-predictions-list">
+                    <span class="pred-item muted">Standby</span>
+                  </div>
+                </div>
+                
+                <div class="finger-status-box">
+                  <span class="telemetry-label">Finger States:</span>
+                  <div class="finger-indicators" id="finger-indicators">
+                    <span class="finger-dot" title="Thumb">T</span>
+                    <span class="finger-dot" title="Index">I</span>
+                    <span class="finger-dot" title="Middle">M</span>
+                    <span class="finger-dot" title="Ring">R</span>
+                    <span class="finger-dot" title="Pinky">P</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AUDIO TTS STATUS BAR -->
+              <div class="tts-status-bar">
+                <div class="tts-left">
+                  <button id="btn-audio-toggle" class="btn-tts-toggle active" title="Toggle Spoken Voice Output">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-speaker"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    <span>Auto-Speak (TTS Active)</span>
+                  </button>
+                  <button id="btn-replay-tts" class="btn-replay-tts" title="Replay Last Translation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                    Replay Voice
+                  </button>
+                </div>
+                <canvas id="tts-audio-waveform" width="120" height="24" class="waveform-mini"></canvas>
+              </div>
             </div>
 
-            <!-- STAGE 4: TEXT-TO-SPEECH (TTS) AUDIO SYNTHESIS -->
-            <div class="stage-section stage-4-section">
-              <div class="stage-header-row">
-                <div class="stage-tag">
-                  <span class="stage-number-chip stage-chip-4">Stage 4</span>
-                  <span class="stage-name">Voice Speech Output (TTS):</span>
+            <!-- 4-STAGE MULTI-MODAL PIPELINE CARD -->
+            <div class="pipeline-card" id="pipeline-card">
+              <div class="pipeline-card-header">
+                <div class="pipeline-card-title-group">
+                  <span class="pipeline-card-badge">4-STAGE PIPELINE</span>
+                  <h3 class="pipeline-card-title">Sign ➔ Sentence AI ➔ Multilingual ➔ Speech</h3>
                 </div>
-                <div class="stage-tools">
-                  <button id="btn-speak-translation" class="btn-speak-primary" title="Speak the translated sentence aloud in the target language">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                    <span>Speak in <strong id="btn-speak-lang-name">Tamil</strong></span>
+                <div class="pipeline-header-controls">
+                  <label class="toggle-switch-label" title="Automatically form sentences when gesture sequence finishes">
+                    <input type="checkbox" id="toggle-auto-sentence" checked />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Auto-Synthesize</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- STAGE 1: SIGN TOKEN SEQUENCE BUFFER -->
+              <div class="stage-section stage-1-section">
+                <div class="stage-header-row">
+                  <div class="stage-tag">
+                    <span class="stage-number-chip stage-chip-1">Stage 1</span>
+                    <span class="stage-name">Recognized Sign Tokens:</span>
+                  </div>
+                  <div class="stage-tools">
+                    <button id="btn-clear-tokens" class="btn-tool-xs" title="Clear Token Queue">⌫ Clear</button>
+                    <button id="btn-generate-sentence" class="btn-synthesize-action" title="Synthesize tokens into grammatical sentence now">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      Form Sentence (Stage 2)
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Active Token Chips Display -->
+                <div class="token-chips-container" id="token-chips-container">
+                  <span class="token-chip-placeholder">Recognized gesture signs will buffer here (e.g. [I] + [FEVER])...</span>
+                </div>
+
+                <!-- Quick Token Add Simulation Pills for instant testing -->
+                <div class="token-quick-adder-row">
+                  <span class="quick-token-label">Quick Concept Add:</span>
+                  <div class="token-quick-chips">
+                    <button class="btn-quick-token" data-token="I">+ I</button>
+                    <button class="btn-quick-token" data-token="FEVER">+ Fever</button>
+                    <button class="btn-quick-token" data-token="NEED">+ Need</button>
+                    <button class="btn-quick-token" data-token="DOCTOR">+ Doctor</button>
+                    <button class="btn-quick-token" data-token="ACCOUNT">+ Account</button>
+                    <button class="btn-quick-token" data-token="DEPOSIT">+ Deposit</button>
+                    <button class="btn-quick-token" data-token="HELP">+ Help</button>
+                    <button class="btn-quick-token" data-token="THANK_YOU">+ Thank You</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STAGE 2: GRAMMAR SENTENCE FORMATION -->
+              <div class="stage-section stage-2-section">
+                <div class="stage-header-row">
+                  <div class="stage-tag">
+                    <span class="stage-number-chip stage-chip-2">Stage 2</span>
+                    <span class="stage-name">Grammatically Meaningful Sentence:</span>
+                  </div>
+                  <span class="grammar-confidence-badge" id="grammar-confidence-badge">Grammar AI Ready</span>
+                </div>
+                <div class="formed-sentence-box">
+                  <p class="formed-sentence-text" id="formed-sentence-text">
+                    "I have a fever and need a medical checkup."
+                  </p>
+                </div>
+              </div>
+
+              <!-- STAGE 3: MULTILINGUAL TRANSLATION (Tamil, Hindi, Telugu, Kannada, Malayalam, English) -->
+              <div class="stage-section stage-3-section">
+                <div class="stage-header-row">
+                  <div class="stage-tag">
+                    <span class="stage-number-chip stage-chip-3">Stage 3</span>
+                    <span class="stage-name">Multilingual Translation:</span>
+                  </div>
+                </div>
+                
+                <!-- Language Selector Tabs -->
+                <div class="lang-selector-pills" id="lang-selector-pills">
+                  <button class="lang-pill active" data-lang="ta" title="Tamil (தமிழ்)">
+                    <span class="lang-flag">🇮🇳</span> <span class="lang-text">தமிழ் (Tamil)</span>
+                  </button>
+                  <button class="lang-pill" data-lang="hi" title="Hindi (हिन्दी)">
+                    <span class="lang-flag">🇮🇳</span> <span class="lang-text">हिन्दी (Hindi)</span>
+                  </button>
+                  <button class="lang-pill" data-lang="te" title="Telugu (తెలుగు)">
+                    <span class="lang-flag">🇮🇳</span> <span class="lang-text">తెలుగు (Telugu)</span>
+                  </button>
+                  <button class="lang-pill" data-lang="kn" title="Kannada (ಕನ್ನಡ)">
+                    <span class="lang-flag">🇮🇳</span> <span class="lang-text">ಕನ್ನಡ (Kannada)</span>
+                  </button>
+                  <button class="lang-pill" data-lang="ml" title="Malayalam (മലയാളം)">
+                    <span class="lang-flag">🇮🇳</span> <span class="lang-text">മലയാളം (Malayalam)</span>
+                  </button>
+                  <button class="lang-pill" data-lang="en" title="English">
+                    <span class="lang-flag">🇬🇧</span> <span class="lang-text">English</span>
+                  </button>
+                </div>
+
+                <!-- Translated Text Display with Large Native Script -->
+                <div class="translated-output-box">
+                  <div class="translated-meta-row">
+                    <span class="target-lang-label" id="target-lang-label">Tamil (தமிழ் • ta-IN):</span>
+                    <span class="translation-mode-indicator">Dictionary + Indic Lexicon</span>
+                  </div>
+                  <h3 class="translated-output-text" id="translated-output-text">
+                    "எனக்கு காய்ச்சல் உள்ளது, மருத்துவ பரிசோதனை தேவை."
+                  </h3>
+                </div>
+              </div>
+
+              <!-- STAGE 4: TEXT-TO-SPEECH (TTS) AUDIO SYNTHESIS -->
+              <div class="stage-section stage-4-section">
+                <div class="stage-header-row">
+                  <div class="stage-tag">
+                    <span class="stage-number-chip stage-chip-4">Stage 4</span>
+                    <span class="stage-name">Voice Speech Output (TTS):</span>
+                  </div>
+                  <div class="stage-tools">
+                    <button id="btn-speak-translation" class="btn-speak-primary" title="Speak the translated sentence aloud in the target language">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                      <span>Speak in <strong id="btn-speak-lang-name">Tamil</strong></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: TWO-WAY COUNTER STAFF & VISITOR VISUAL DISPLAY -->
+          <section class="counter-panel staff-panel" aria-label="Service Counter Staff Communication Controls">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-badge-staff">COUNTER STAFF INTERFACE</span>
+                <h2 class="panel-title">Two-Way Speech & Sign Prompter</h2>
+              </div>
+              
+              <div class="transcript-actions">
+                <button id="btn-export-receipt" class="btn-ghost-small" title="Print Official Receipt">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                  <span>Print Receipt</span>
+                </button>
+                <button id="btn-export-json" class="btn-ghost-small" title="Export JSON Compliance Log">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>JSON</span>
+                </button>
+                <button id="btn-clear-transcript" class="btn-ghost-small" title="Clear Conversation">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- TWO-WAY SIGN PROMPTER & ANIMATED DISPLAY (FOR DEAF CUSTOMER VISIBILITY) -->
+            <div class="two-way-prompter-section" id="prompter-section">
+              <!-- Dynamically populated by SignVisualizer -->
+            </div>
+
+            <!-- STAFF VOICE & TEXT INPUT BAR -->
+            <div class="staff-speech-input-card">
+              <div class="staff-input-header">
+                <label class="staff-input-label">Staff Microphone / Speech-to-Sign:</label>
+                <span id="stt-status-indicator" class="stt-idle-badge">Mic Ready</span>
+              </div>
+
+              <div class="staff-input-row">
+                <button id="btn-staff-mic" class="btn-staff-mic" title="Click to Speak to Customer" aria-label="Toggle Staff Microphone">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-mic"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                  <span id="mic-btn-label">Speak (STT)</span>
+                </button>
+
+                <div class="staff-text-input-wrap">
+                  <input type="text" id="staff-text-input" class="staff-text-input" placeholder="Or type reply for visitor here (Enter to send)..." />
+                  <button id="btn-send-staff-text" class="btn-send-text">Send</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCENARIO QUICK-REPLY PRESETS -->
+            <div class="quick-replies-container">
+              <div class="quick-replies-header">
+                <span class="quick-title">Desk Quick Actions (<span id="quick-scenario-name">Bank</span>):</span>
+              </div>
+              <div class="quick-replies-pills" id="quick-replies-pills">
+                <!-- Dynamically populated based on active scenario -->
+              </div>
+            </div>
+
+            <!-- LIVE DUAL-CONVERSATION TRANSCRIPT -->
+            <div class="transcript-wrapper">
+              <div class="transcript-header-bar">
+                <span class="transcript-title">Real-Time Service Dialogue Log</span>
+                <span class="transcript-count" id="transcript-count">0 turns</span>
+              </div>
+              <div class="transcript-scroll-area" id="transcript-container">
+                <!-- Dynamically populated by TranscriptManager -->
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- VIEW 2: DEDICATED GESTURE-TO-SENTENCE STUDIO (SEPARATE SECTION) -->
+      <div class="workspace-view" id="view-sentence-studio" style="display: none;">
+        <div class="studio-container">
+          
+          <!-- STUDIO HERO HEADER -->
+          <div class="studio-hero-card">
+            <div class="studio-hero-title-group">
+              <div class="studio-hero-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <div>
+                <div class="studio-title-row">
+                  <h2 class="studio-title">Gesture-to-Sentence Studio</h2>
+                  <span class="studio-badge-glow">AI Sentence Synthesizer</span>
+                </div>
+                <p class="studio-sub">Sign letters or gesture concepts in real time ➔ Stage words into an interactive sequence ➔ AI builds fluent sentences with multilingual Indic speech.</p>
+              </div>
+            </div>
+
+            <div class="studio-hero-controls">
+              <button id="btn-studio-camera-sync" class="btn-action-highlight">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                <span id="studio-camera-btn-text">Camera Active</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- STUDIO DUAL-GRID WORKSPACE -->
+          <div class="studio-grid">
+            
+            <!-- STUDIO LEFT COLUMN: LIVE GESTURE STREAM & WORD BUILDER -->
+            <div class="studio-card studio-input-panel">
+              <div class="studio-card-header">
+                <div class="studio-card-title-wrap">
+                  <span class="studio-step-badge">STEP 1</span>
+                  <h3 class="studio-card-title">Live Gesture & Word Staging Deck</h3>
+                </div>
+                <div class="live-recog-pill" id="studio-live-recog-pill">
+                  <span class="pulse-indicator"></span>
+                  <span id="studio-active-sign-badge">Fingerspell or Sign</span>
+                </div>
+              </div>
+
+              <!-- LIVE SPELLED WORD FORMULATION BOX -->
+              <div class="studio-word-builder-box">
+                <div class="builder-meta-row">
+                  <span class="builder-label">Current Word Buffer:</span>
+                  <span class="builder-gesture-cues">
+                    🖐️ <strong>Swipe ➔</strong> Space/Add | 👈 <strong>Swipe ⬅</strong> Backspace
+                  </span>
+                </div>
+
+                <div class="studio-spelled-display" id="studio-spelled-display">
+                  <div class="spelled-letters-tiles" id="studio-spelled-tiles">
+                    <!-- Dynamically rendered letter tiles -->
+                  </div>
+                  <span id="studio-spelled-raw-text" class="spelled-raw-placeholder">Hold hand in camera to fingerspell letters...</span>
+                </div>
+
+                <!-- Word Deck Actions -->
+                <div class="studio-word-actions-row">
+                  <button id="btn-studio-push-word" class="btn-studio-primary-glow" title="Commit this word into the Sentence Chain">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Push Word to Sentence</span>
+                  </button>
+
+                  <button id="btn-studio-space" class="btn-studio-tool" title="Add Space">
+                    ␣ Space <span class="kbd-pill">Hand ➔</span>
+                  </button>
+
+                  <button id="btn-studio-backspace" class="btn-studio-tool" title="Delete Last Letter">
+                    ⌫ Backspace <span class="kbd-pill">Hand ⬅</span>
+                  </button>
+
+                  <button id="btn-studio-clear-word" class="btn-studio-tool" title="Clear Current Word">
+                    🗑️ Clear
+                  </button>
+
+                  <button id="btn-studio-speak-word" class="btn-studio-tool" title="Speak Current Word">
+                    🔊 Speak
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- RIGHT COLUMN: TWO-WAY COUNTER STAFF & VISITOR VISUAL DISPLAY -->
-        <section class="counter-panel staff-panel" aria-label="Service Counter Staff Communication Controls">
-          <div class="panel-header">
-            <div class="panel-title-group">
-              <span class="panel-badge-staff">COUNTER STAFF INTERFACE</span>
-              <h2 class="panel-title">Two-Way Speech & Sign Prompter</h2>
-            </div>
-            
-            <div class="transcript-actions">
-              <button id="btn-export-receipt" class="btn-ghost-small" title="Print Official Receipt">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span>Print Receipt</span>
-              </button>
-              <button id="btn-export-json" class="btn-ghost-small" title="Export JSON Compliance Log">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>JSON</span>
-              </button>
-              <button id="btn-clear-transcript" class="btn-ghost-small" title="Clear Conversation">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
-            </div>
-          </div>
+              <!-- CATEGORIZED CONCEPT WORD PALETTE -->
+              <div class="studio-concept-palette">
+                <div class="palette-header">
+                  <span class="palette-title">One-Click Word Concept Bank:</span>
+                  <span class="palette-hint">Click or sign to instantly stage words</span>
+                </div>
 
-          <!-- TWO-WAY SIGN PROMPTER & ANIMATED DISPLAY (FOR DEAF CUSTOMER VISIBILITY) -->
-          <div class="two-way-prompter-section" id="prompter-section">
-            <!-- Dynamically populated by SignVisualizer -->
-          </div>
+                <div class="palette-categories-grid">
+                  <!-- Health -->
+                  <div class="palette-group">
+                    <span class="group-label">🏥 Hospital & Health</span>
+                    <div class="palette-chips">
+                      <button class="btn-palette-chip" data-word="I">I</button>
+                      <button class="btn-palette-chip" data-word="FEVER">Fever</button>
+                      <button class="btn-palette-chip" data-word="NEED">Need</button>
+                      <button class="btn-palette-chip" data-word="DOCTOR">Doctor</button>
+                      <button class="btn-palette-chip" data-word="MEDICINE">Medicine</button>
+                      <button class="btn-palette-chip" data-word="INJURY">Injury</button>
+                      <button class="btn-palette-chip" data-word="EMERGENCY">Emergency</button>
+                    </div>
+                  </div>
 
-          <!-- STAFF VOICE & TEXT INPUT BAR -->
-          <div class="staff-speech-input-card">
-            <div class="staff-input-header">
-              <label class="staff-input-label">Staff Microphone / Speech-to-Sign:</label>
-              <span id="stt-status-indicator" class="stt-idle-badge">Mic Ready</span>
-            </div>
+                  <!-- Banking -->
+                  <div class="palette-group">
+                    <span class="group-label">💳 Banking & Finance</span>
+                    <div class="palette-chips">
+                      <button class="btn-palette-chip" data-word="ACCOUNT">Account</button>
+                      <button class="btn-palette-chip" data-word="MONEY">Money</button>
+                      <button class="btn-palette-chip" data-word="DEPOSIT">Deposit</button>
+                      <button class="btn-palette-chip" data-word="WITHDRAW">Withdraw</button>
+                      <button class="btn-palette-chip" data-word="RECEIPT">Receipt</button>
+                      <button class="btn-palette-chip" data-word="SIGN">Sign</button>
+                      <button class="btn-palette-chip" data-word="ID_CARD">ID Card</button>
+                    </div>
+                  </div>
 
-            <div class="staff-input-row">
-              <button id="btn-staff-mic" class="btn-staff-mic" title="Click to Speak to Customer" aria-label="Toggle Staff Microphone">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-mic"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                <span id="mic-btn-label">Speak (STT)</span>
-              </button>
-
-              <div class="staff-text-input-wrap">
-                <input type="text" id="staff-text-input" class="staff-text-input" placeholder="Or type reply for visitor here (Enter to send)..." />
-                <button id="btn-send-staff-text" class="btn-send-text">Send</button>
+                  <!-- Civic & Daily -->
+                  <div class="palette-group">
+                    <span class="group-label">🏛️ Public & Courtesy</span>
+                    <div class="palette-chips">
+                      <button class="btn-palette-chip" data-word="HELLO">Hello</button>
+                      <button class="btn-palette-chip" data-word="THANK_YOU">Thank You</button>
+                      <button class="btn-palette-chip" data-word="PLEASE">Please</button>
+                      <button class="btn-palette-chip" data-word="WHERE">Where</button>
+                      <button class="btn-palette-chip" data-word="WATER">Water</button>
+                      <button class="btn-palette-chip" data-word="NAME">Name</button>
+                      <button class="btn-palette-chip" data-word="HELP">Help</button>
+                      <button class="btn-palette-chip" data-word="YES">Yes</button>
+                      <button class="btn-palette-chip" data-word="NO">No</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- STUDIO RIGHT COLUMN: SENTENCE BUILDER & SYNTHESIZER -->
+            <div class="studio-card studio-output-panel">
+              <div class="studio-card-header">
+                <div class="studio-card-title-wrap">
+                  <span class="studio-step-badge step-2-badge">STEP 2 & 3</span>
+                  <h3 class="studio-card-title">Interactive Sentence Builder & AI Translation</h3>
+                </div>
+                <div class="studio-header-toggles">
+                  <label class="toggle-switch-label" title="Auto-synthesize sentence when words are added">
+                    <input type="checkbox" id="studio-toggle-auto" checked />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Auto-Form</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- STAGED WORD CHAIN CANVAS -->
+              <div class="studio-sentence-chain-section">
+                <div class="chain-header-row">
+                  <div class="chain-title-wrap">
+                    <span class="chain-label">Sentence Word Sequence:</span>
+                    <span class="chain-count" id="studio-chain-count">0 words</span>
+                  </div>
+                  <div class="chain-controls">
+                    <button id="btn-studio-clear-chain" class="btn-tool-xs" title="Clear All Words">⌫ Clear Chain</button>
+                    <button id="btn-studio-synthesize" class="btn-synthesize-action" title="Synthesize Word Sequence into Grammatical Sentence">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      ✨ Synthesize Sentence
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Word Blocks Container -->
+                <div class="studio-word-chain-canvas" id="studio-word-chain">
+                  <span class="chain-placeholder">No words in chain yet. Fingerspell words or click word chips on the left to start building sentences...</span>
+                </div>
+
+                <!-- Custom Word / Name Typing Input -->
+                <div class="studio-custom-word-row">
+                  <input type="text" id="input-studio-custom-word" class="studio-input" placeholder="Type custom word or name to insert (e.g. John, Prescription, Urgent)..." />
+                  <button id="btn-studio-add-custom-word" class="btn-studio-add-word">+ Insert Word</button>
+                </div>
+              </div>
+
+              <!-- SYNTHESIZED GRAMMAR SENTENCE DISPLAY (STAGE 2) -->
+              <div class="studio-formed-sentence-card">
+                <div class="formed-sentence-header">
+                  <span class="formed-tag">✨ Synthesized Natural Sentence:</span>
+                  <span class="grammar-confidence-badge" id="studio-grammar-confidence">Grammar AI Ready</span>
+                </div>
+                <div class="formed-sentence-body">
+                  <h3 class="studio-sentence-text" id="studio-formed-sentence-text">
+                    "I have a fever and need a medical checkup."
+                  </h3>
+                </div>
+                <div class="formed-sentence-actions">
+                  <button id="btn-studio-copy-sentence" class="btn-action-ghost-sm" title="Copy sentence text">
+                    📋 Copy
+                  </button>
+                  <button id="btn-studio-send-dialogue" class="btn-action-highlight-sm" title="Post this sentence to the Service Desk Dialogue Transcript">
+                    💬 Send to Counter Dialogue
+                  </button>
+                </div>
+              </div>
+
+              <!-- MULTILINGUAL TRANSLATION & INDIC VOICE SYNTHESIS (STAGE 3 & 4) -->
+              <div class="studio-translation-card">
+                <div class="translation-header">
+                  <span class="translation-tag">🌐 Multilingual Translation & Indic Speech:</span>
+                </div>
+
+                <!-- Language Tabs -->
+                <div class="studio-lang-selector" id="studio-lang-selector">
+                  <button class="studio-lang-pill active" data-lang="ta" title="Tamil">
+                    <span>🇮🇳 தமிழ் (Tamil)</span>
+                  </button>
+                  <button class="studio-lang-pill" data-lang="hi" title="Hindi">
+                    <span>🇮🇳 हिन्दी (Hindi)</span>
+                  </button>
+                  <button class="studio-lang-pill" data-lang="te" title="Telugu">
+                    <span>🇮🇳 తెలుగు (Telugu)</span>
+                  </button>
+                  <button class="studio-lang-pill" data-lang="kn" title="Kannada">
+                    <span>🇮🇳 ಕನ್ನಡ (Kannada)</span>
+                  </button>
+                  <button class="studio-lang-pill" data-lang="ml" title="Malayalam">
+                    <span>🇮🇳 മലയാളം (Malayalam)</span>
+                  </button>
+                  <button class="studio-lang-pill" data-lang="en" title="English">
+                    <span>🇬🇧 English</span>
+                  </button>
+                </div>
+
+                <!-- Translated Text Output Box -->
+                <div class="studio-translated-box">
+                  <div class="studio-translated-meta">
+                    <span id="studio-target-lang-label">Tamil (தமிழ் • ta-IN):</span>
+                    <button id="btn-studio-speak-translation" class="btn-studio-speak-large" title="Speak sentence aloud in target language">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                      <span>🔊 Speak in <strong id="studio-speak-lang-name">Tamil</strong></span>
+                    </button>
+                  </div>
+                  <h2 class="studio-translated-text" id="studio-translated-output-text">
+                    "எனக்கு காய்ச்சல் உள்ளது, மருத்துவ பரிசோதனை தேவை."
+                  </h2>
+                </div>
+              </div>
+
+              <!-- RECENT SENTENCES HISTORY LOG -->
+              <div class="studio-history-section">
+                <div class="history-header-row">
+                  <span class="history-title">📚 Recent Formed Sentences Log:</span>
+                  <button id="btn-studio-clear-history" class="btn-ghost-xs">Clear History</button>
+                </div>
+                <div class="studio-history-list" id="studio-history-list">
+                  <div class="history-item">
+                    <span class="history-text">"I have a fever and need a medical checkup."</span>
+                    <button class="btn-history-play" data-text="I have a fever and need a medical checkup." title="Replay">🔊 Speak</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
-          <!-- SCENARIO QUICK-REPLY PRESETS -->
-          <div class="quick-replies-container">
-            <div class="quick-replies-header">
-              <span class="quick-title">Desk Quick Actions (<span id="quick-scenario-name">Bank</span>):</span>
-            </div>
-            <div class="quick-replies-pills" id="quick-replies-pills">
-              <!-- Dynamically populated based on active scenario -->
-            </div>
-          </div>
-
-          <!-- LIVE DUAL-CONVERSATION TRANSCRIPT -->
-          <div class="transcript-wrapper">
-            <div class="transcript-header-bar">
-              <span class="transcript-title">Real-Time Service Dialogue Log</span>
-              <span class="transcript-count" id="transcript-count">0 turns</span>
-            </div>
-            <div class="transcript-scroll-area" id="transcript-container">
-              <!-- Dynamically populated by TranscriptManager -->
-            </div>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
 
       <!-- MODAL 1: INTERACTIVE SIGN & ASL ALPHABET & VIDEO DATASET DICTIONARY -->
       <div id="modal-dictionary" class="modal-backdrop hidden">

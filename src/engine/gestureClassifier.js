@@ -333,6 +333,34 @@ export class GestureClassifier {
       }
     }
 
+    // PAIN / HURT: Both index fingers pointing toward each other touching/twisting
+    const indexToIndexDist = distance(hand1.raw[LANDMARK.INDEX_TIP], hand2.raw[LANDMARK.INDEX_TIP]);
+    if (indexToIndexDist < 0.20 && h1Fingers.index === 'OPEN' && h2Fingers.index === 'OPEN' && h1Fingers.ring !== 'OPEN' && h2Fingers.ring !== 'OPEN') {
+      results.push({ id: 'PAIN_HURT', confidence: 0.95, reason: 'Index fingers pointing together (Pain/Hurt)' });
+    }
+
+    // NAME: Both hands H-shape (index & middle) crossing/tapping
+    if (indexToIndexDist < 0.22 && h1Fingers.index === 'OPEN' && h1Fingers.middle === 'OPEN' && h2Fingers.index === 'OPEN' && h2Fingers.middle === 'OPEN' && h1Fingers.pinky !== 'OPEN' && h2Fingers.pinky !== 'OPEN') {
+      results.push({ id: 'NAME', confidence: 0.94, reason: 'H-hands crossed tapping (Name)' });
+    }
+
+    // TIME / CLOCK: Dominant index tapping top of non-dominant wrist
+    const h1IndexToH2WristTop = distance(hand1.raw[LANDMARK.INDEX_TIP], hand2.wristPosition);
+    const h2IndexToH1WristTop = distance(hand2.raw[LANDMARK.INDEX_TIP], hand1.wristPosition);
+    if ((h1IndexToH2WristTop < 0.24 || h2IndexToH1WristTop < 0.24)) {
+      const activeTapper = h1IndexToH2WristTop < h2IndexToH1WristTop ? hand1 : hand2;
+      if (activeTapper.fingerStates.index === 'OPEN' && activeTapper.fingerStates.pinky !== 'OPEN') {
+        results.push({ id: 'TIME', confidence: 0.94, reason: 'Index tapping wrist watch (Time)' });
+      }
+    }
+
+    // STOP / HALT: Dominant vertical flat hand chopping onto non-dominant flat horizontal palm
+    if (rel.areHandsTouching && rel.palmDistance < 0.22) {
+      if ((h1Fingers.index === 'OPEN' && h1Fingers.pinky === 'OPEN') && (h2Fingers.index === 'OPEN' && h2Fingers.pinky === 'OPEN')) {
+        results.push({ id: 'STOP', confidence: 0.93, reason: 'Hand chopping flat palm (Stop)' });
+      }
+    }
+
     // SIGN_FORM: Flat non-dominant palm + dominant hand holding pen signing
     if (rel.areHandsTouching) {
       const isOneFlat = (h1Fingers.index === 'OPEN' && h1Fingers.middle === 'OPEN' && h1Fingers.pinky === 'OPEN') ||
@@ -430,67 +458,132 @@ export class GestureClassifier {
       }
     }
 
-    // 7. I AM DEAF: Pointing index to ear/mouth
+    // 7. I / ME: Index pointing directly toward chest
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (raw[LANDMARK.INDEX_TIP].x > 0.35 && raw[LANDMARK.INDEX_TIP].x < 0.65 && raw[LANDMARK.INDEX_TIP].y > 0.42 && raw[LANDMARK.INDEX_TIP].y < 0.85) {
+        results.push({ id: 'I_ME', confidence: 0.95, reason: 'Index pointing to chest (I / Me)' });
+      }
+    }
+
+    // 8. YOU: Index pointing forward toward screen
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (raw[LANDMARK.INDEX_TIP].y < 0.55 && !motion.isShaking) {
+        results.push({ id: 'YOU', confidence: 0.93, reason: 'Index pointing forward (You)' });
+      }
+    }
+
+    // 9. MY / MINE: Flat hand pressed against chest
+    if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
+      if (raw[LANDMARK.WRIST].y >= 0.58 && raw[LANDMARK.WRIST].y <= 0.88 && motion.isStationary) {
+        results.push({ id: 'MY_MINE', confidence: 0.92, reason: 'Flat hand on chest (My/Mine)' });
+      }
+    }
+
+    // 10. NEED: Hooked index finger (X-hand) moving downward
+    if (f.index === 'HALF' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      results.push({ id: 'NEED', confidence: 0.94, reason: 'Hooked index downward (Need)' });
+    }
+
+    // 11. WANT: Clawed curved fingers pulling inward
+    if (f.index === 'HALF' && f.middle === 'HALF' && f.ring === 'HALF' && f.pinky === 'HALF' && f.thumb === 'OPEN') {
+      results.push({ id: 'WANT', confidence: 0.93, reason: 'Clawed hand pulling (Want)' });
+    }
+
+    // 12. FEVER: Back of hand against forehead
+    if (raw[LANDMARK.INDEX_TIP].y < 0.30 && (f.index === 'OPEN' || f.middle === 'OPEN')) {
+      results.push({ id: 'FEVER', confidence: 0.95, reason: 'Hand against forehead (Fever)' });
+    }
+
+    // 13. EAT / FOOD: Fingertips near mouth
+    if (raw[LANDMARK.INDEX_TIP].y >= 0.30 && raw[LANDMARK.INDEX_TIP].y < 0.48 && (f.index === 'HALF' || f.middle === 'HALF')) {
+      results.push({ id: 'EAT_FOOD', confidence: 0.93, reason: 'Fingertips to mouth (Food / Eat)' });
+    }
+
+    // 14. DRINK / WATER: C-hand cup tipped to lips
+    if (raw[LANDMARK.INDEX_TIP].y >= 0.30 && raw[LANDMARK.INDEX_TIP].y < 0.48 && f.thumb === 'OPEN' && f.index === 'HALF' && f.pinky !== 'OPEN') {
+      results.push({ id: 'DRINK_WATER', confidence: 0.94, reason: 'Cup tilted to mouth (Drink / Water)' });
+    }
+
+    // 15. WHAT / QUESTION: Open palm up shaking side to side
+    if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
+      if (motion.isShaking && raw[LANDMARK.WRIST].y > 0.50) {
+        results.push({ id: 'WHAT', confidence: 0.94, reason: 'Open palm shaking (What)' });
+      }
+    }
+
+    // 16. WHERE: Index pointing up wagging side to side
+    if (f.index === 'OPEN' && f.middle !== 'OPEN' && f.ring !== 'OPEN' && f.pinky !== 'OPEN') {
+      if (motion.isShaking || motion.xReversals >= 1) {
+        results.push({ id: 'WHERE', confidence: 0.95, reason: 'Index wagging side to side (Where)' });
+      }
+    }
+
+    // 17. BAD / UNHAPPY: Flat hand rotated palm down
+    if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN' && o.pointingDown) {
+      results.push({ id: 'BAD', confidence: 0.93, reason: 'Flat hand facing downward (Bad)' });
+    }
+
+    // 18. I AM DEAF: Pointing index to ear/mouth
     if (f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
-      if (raw[LANDMARK.INDEX_TIP].y < 0.45) {
+      if (raw[LANDMARK.INDEX_TIP].y < 0.45 && !motion.isShaking) {
         results.push({ id: 'DEAF_ASSIST', confidence: 0.92, reason: 'Pointing near ear/head region' });
       }
     }
 
-    // 8. ID CARD: L-shape thumb and index
+    // 19. ID CARD: L-shape thumb and index
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
       if (a.thumbIndexSpread > 40 && a.thumbIndexSpread < 125) {
         results.push({ id: 'ID_CARD', confidence: 0.93, reason: 'L-shape ID badge gesture' });
       }
     }
 
-    // 9. ACCOUNT / MONEY: Thumb-index money pinch
+    // 20. ACCOUNT / MONEY: Thumb-index money pinch
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'FOLDED' && f.pinky === 'FOLDED') {
       if (d.thumbTipToIndexTip < 0.20 && d.thumbTipToMiddleTip < 0.22) {
         results.push({ id: 'ACCOUNT_MONEY', confidence: 0.92, reason: 'Thumb-index money pinch' });
       }
     }
 
-    // 10. EMERGENCY: Rapid urgent hand shake
+    // 21. EMERGENCY: Rapid urgent hand shake
     if (motion.isShaking && motion.velocity.speed > 0.12) {
       results.push({ id: 'EMERGENCY', confidence: 0.96, reason: 'Urgent rapid hand oscillation' });
     }
 
-    // 11. WATER / RESTROOM: W-sign
+    // 22. WATER / RESTROOM: W-sign
     if (f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'FOLDED' && f.thumb === 'FOLDED') {
       results.push({ id: 'WATER_RESTROOM', confidence: 0.93, reason: 'W-gesture (Water / Facility)' });
     }
 
-    // 12. POLICE / SECURITY: C-hand over chest
+    // 23. POLICE / SECURITY: C-hand over chest
     if (f.index === 'HALF' && f.middle === 'HALF' && f.ring === 'HALF' && f.pinky === 'HALF' && f.thumb === 'OPEN') {
       if (raw[LANDMARK.WRIST].y > 0.50) {
         results.push({ id: 'POLICE_SECURITY', confidence: 0.87, reason: 'C-hand over chest badge' });
       }
     }
 
-    // 13. WAIT / STOP: Steady flat stop palm
+    // 24. WAIT / STOP: Steady flat stop palm
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'OPEN' && f.ring === 'OPEN' && f.pinky === 'OPEN') {
       if (motion.isStationary && o.pointingUp) {
         results.push({ id: 'WAIT_STOP', confidence: 0.89, reason: 'Steady flat stop palm' });
       }
     }
 
-    // 14. PHONE / CALL: Y-sign (Thumb and Pinky extended)
+    // 25. PHONE / CALL: Y-sign (Thumb and Pinky extended)
     if (f.thumb === 'OPEN' && f.index === 'FOLDED' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'OPEN') {
       results.push({ id: 'PHONE_CALL', confidence: 0.95, reason: 'Y-hand telephone gesture' });
     }
 
-    // 15. ILY: Thumb, Index, Pinky extended
+    // 26. ILY: Thumb, Index, Pinky extended
     if (f.thumb === 'OPEN' && f.index === 'OPEN' && f.middle === 'FOLDED' && f.ring === 'FOLDED' && f.pinky === 'OPEN') {
       results.push({ id: 'SIGN_ILY', confidence: 0.96, reason: 'ILY ASL sign' });
     }
 
-    // 16. HAND SPACE (Swipe Right in Gestures mode)
+    // 27. HAND SPACE (Swipe Right in Gestures mode)
     if (motion.isSwipingRight && motion.velocity.speed > 0.06 && !motion.isWaving) {
       results.push({ id: 'SPACE', confidence: 0.98, reason: 'Space (Swipe Right)' });
     }
 
-    // 17. HAND BACKSPACE (Swipe Left in Gestures mode)
+    // 28. HAND BACKSPACE (Swipe Left in Gestures mode)
     if (motion.isSwipingLeft && motion.velocity.speed > 0.06 && !motion.isWaving) {
       results.push({ id: 'BACKSPACE', confidence: 0.98, reason: 'Backspace (Swipe Left)' });
     }

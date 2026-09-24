@@ -16,7 +16,36 @@ export class SentenceFormer {
     this.autoCommit = true;
     this.commitDebounceTimer = null;
 
+    this.sentenceHistory = [];
     this.grammarRules = this._initGrammarRules();
+  }
+
+  _normalizeToken(t) {
+    if (!t) return '';
+    const clean = t.toUpperCase().replace(/\s+/g, '_');
+    const aliasMap = {
+      'I_ME': 'I',
+      'ME': 'I',
+      'MY_MINE': 'MY',
+      'MINE': 'MY',
+      'YOURS': 'YOUR',
+      'DRINK_WATER': 'WATER',
+      'DRINK': 'WATER',
+      'EAT_FOOD': 'FOOD',
+      'EAT': 'FOOD',
+      'PAIN_HURT': 'PAIN',
+      'HURT': 'PAIN',
+      'DOCTOR_MEDICAL': 'DOCTOR',
+      'MEDICINE_PHARMACY': 'MEDICINE',
+      'RECEIPT_FEE': 'RECEIPT',
+      'SIGN_FORM': 'SIGN',
+      'ACCOUNT_MONEY': 'ACCOUNT',
+      'HELP_ASSIST': 'HELP',
+      'GOOD_OK': 'GOOD',
+      'GOOD_MORNING': 'GOOD_MORNING',
+      'GOOD_AFTERNOON': 'GOOD_AFTERNOON'
+    };
+    return aliasMap[clean] || clean;
   }
 
   _initGrammarRules() {
@@ -29,10 +58,118 @@ export class SentenceFormer {
         category: 'medical'
       },
       {
+        tokens: ['I', 'HAVE', 'FEVER'],
+        sentence: 'I have a fever and need a medical checkup.',
+        confidence: 0.99,
+        category: 'medical'
+      },
+      {
+        tokens: ['I', 'HAVE', 'PAIN'],
+        sentence: 'I am in pain and require medical assistance.',
+        confidence: 0.98,
+        category: 'medical'
+      },
+      {
+        tokens: ['I', 'PAIN'],
+        sentence: 'I am experiencing pain and need medical care.',
+        confidence: 0.97,
+        category: 'medical'
+      },
+      {
+        tokens: ['PAIN'],
+        sentence: 'I am experiencing pain here.',
+        confidence: 0.95,
+        category: 'medical'
+      },
+      {
         tokens: ['FEVER'],
         sentence: 'I have a high fever.',
         confidence: 0.95,
         category: 'medical'
+      },
+      {
+        tokens: ['I', 'WANT', 'WATER'],
+        sentence: 'I would like some drinking water, please.',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['I', 'NEED', 'WATER'],
+        sentence: 'I need some drinking water, please.',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['WATER'],
+        sentence: 'Where can I find drinking water / restroom?',
+        confidence: 0.94,
+        category: 'general'
+      },
+      {
+        tokens: ['I', 'WANT', 'FOOD'],
+        sentence: 'I would like to have some food / meal.',
+        confidence: 0.98,
+        category: 'food'
+      },
+      {
+        tokens: ['FOOD'],
+        sentence: 'Where is the food / cafeteria counter?',
+        confidence: 0.94,
+        category: 'food'
+      },
+      {
+        tokens: ['I', 'NEED', 'HELP'],
+        sentence: 'I need assistance and guidance, please.',
+        confidence: 0.99,
+        category: 'general'
+      },
+      {
+        tokens: ['WHERE', 'DOCTOR'],
+        sentence: 'Where can I find the doctor or consultation room?',
+        confidence: 0.98,
+        category: 'medical'
+      },
+      {
+        tokens: ['WHERE', 'RESTROOM'],
+        sentence: 'Where is the restroom facility located?',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['WHAT', 'TIME'],
+        sentence: 'What is the current time or appointment slot?',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['MY', 'NAME'],
+        sentence: 'My name is on the identity document.',
+        confidence: 0.96,
+        category: 'general'
+      },
+      {
+        tokens: ['WHAT', 'YOUR', 'NAME'],
+        sentence: 'What is your name? Please introduce yourself.',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['PLEASE', 'HELP'],
+        sentence: 'Please, kindly assist me with this service.',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['PLEASE', 'WAIT'],
+        sentence: 'Please wait for a moment while I prepare.',
+        confidence: 0.97,
+        category: 'general'
+      },
+      {
+        tokens: ['THANK_YOU', 'HELP'],
+        sentence: 'Thank you very much for all your help and support!',
+        confidence: 0.99,
+        category: 'general'
       },
       {
         tokens: ['I', 'INJURY'],
@@ -53,9 +190,27 @@ export class SentenceFormer {
         category: 'medical'
       },
       {
+        tokens: ['NEED', 'DOCTOR'],
+        sentence: 'I need to consult a doctor urgently.',
+        confidence: 0.98,
+        category: 'medical'
+      },
+      {
         tokens: ['DOCTOR'],
         sentence: 'I need to consult a doctor.',
         confidence: 0.95,
+        category: 'medical'
+      },
+      {
+        tokens: ['I', 'NEED', 'MEDICINE'],
+        sentence: 'I need to collect my prescribed medicine from the pharmacy.',
+        confidence: 0.98,
+        category: 'medical'
+      },
+      {
+        tokens: ['NEED', 'MEDICINE'],
+        sentence: 'I need my prescribed medication, please.',
+        confidence: 0.97,
         category: 'medical'
       },
       {
@@ -103,9 +258,21 @@ export class SentenceFormer {
         category: 'financial'
       },
       {
+        tokens: ['I', 'DEPOSIT', 'MONEY'],
+        sentence: 'I want to deposit money into my bank account.',
+        confidence: 0.98,
+        category: 'financial'
+      },
+      {
         tokens: ['DEPOSIT', 'MONEY'],
         sentence: 'I would like to deposit money into my account.',
         confidence: 0.97,
+        category: 'financial'
+      },
+      {
+        tokens: ['I', 'WITHDRAW', 'MONEY'],
+        sentence: 'I would like to withdraw cash from my bank account.',
+        confidence: 0.98,
         category: 'financial'
       },
       {
@@ -171,10 +338,22 @@ export class SentenceFormer {
         category: 'general'
       },
       {
-        tokens: ['WHAT_IS_YOUR_NAME'],
-        sentence: 'What is your name? / Identity verification.',
-        confidence: 0.96,
+        tokens: ['MY', 'NAME'],
+        sentence: 'My name is on the identity document.',
+        confidence: 0.95,
         category: 'general'
+      },
+      {
+        tokens: ['WHERE', 'LOCATION'],
+        sentence: 'Where is this office located / Can you guide me with directions?',
+        confidence: 0.97,
+        category: 'civic'
+      },
+      {
+        tokens: ['WHERE', 'WATER'],
+        sentence: 'Where can I find drinking water or the restroom facility?',
+        confidence: 0.97,
+        category: 'civic'
       },
       {
         tokens: ['HELLO', 'GOOD_MORNING'],
@@ -185,6 +364,12 @@ export class SentenceFormer {
       {
         tokens: ['HELLO', 'GOOD_AFTERNOON'],
         sentence: 'Hello, good afternoon!',
+        confidence: 0.98,
+        category: 'general'
+      },
+      {
+        tokens: ['HELLO', 'THANK_YOU'],
+        sentence: 'Hello, thank you very much for your kind support!',
         confidence: 0.98,
         category: 'general'
       },
@@ -213,319 +398,17 @@ export class SentenceFormer {
         category: 'general'
       },
       {
-        tokens: ['HUG'],
-        sentence: 'Warm greetings and regards.',
-        confidence: 0.92,
+        tokens: ['PLEASE', 'HELP'],
+        sentence: 'Please, kindly assist me with this service.',
+        confidence: 0.98,
         category: 'general'
       },
       {
-        tokens: ['INTERVIEW'],
-        sentence: 'I am here for my scheduled appointment or interview.',
+        tokens: ['HELP'],
+        sentence: 'I need assistance and guidance, please.',
         confidence: 0.95,
-        category: 'civic'
+        category: 'general'
       },
-      {
-        tokens: ['EXAM'],
-        sentence: 'I am here for document examination and verification.',
-        confidence: 0.95,
-        category: 'civic'
-      },
-      {
-        tokens: ['MATHS'],
-        sentence: 'Please calculate the total amount and billing figures for me.',
-        confidence: 0.95,
-        category: 'civic'
-      },
-      {
-        tokens: ['WRITER'],
-        sentence: 'I need assistance from a scribe to write and fill this form.',
-        confidence: 0.96,
-        category: 'civic'
-      },
-      {
-        tokens: ['TEMPLE'],
-        sentence: 'Where is the community hall or temple located?',
-        confidence: 0.94,
-        category: 'civic'
-      },
-      {
-        tokens: ['KARNATAKA'],
-        sentence: 'I am applying under Karnataka state jurisdiction.',
-        confidence: 0.95,
-        category: 'civic'
-      },
-      {
-        tokens: ['UMBRELLA'],
-        sentence: 'Inquiring about lost umbrella and weather assistance.',
-        confidence: 0.93,
-        category: 'civic'
-      },
-      {
-        tokens: ['KNIFE'],
-        sentence: 'Security alert: sharp object reported.',
-        confidence: 0.95,
-        category: 'civic'
-      },
-      {
-        tokens: ['MAN'],
-        sentence: 'The gentleman accompanying me is my representative.',
-        confidence: 0.92,
-        category: 'civic'
-      },
-      {
-        tokens: ['WIFE'],
-        sentence: 'This transaction is for my spouse and joint account.',
-        confidence: 0.94,
-        category: 'civic'
-      },
-      {
-        tokens: ['UNCLE'],
-        sentence: 'My guardian and representative is present with me.',
-        confidence: 0.92,
-        category: 'civic'
-      },
-      {
-        tokens: ['BUSY'],
-        sentence: 'The counter is busy, I will wait for my turn.',
-        confidence: 0.92,
-        category: 'civic'
-      },
-      {
-        tokens: ['STILL'],
-        sentence: 'I am still standing by for the update.',
-        confidence: 0.92,
-        category: 'civic'
-      },
-      {
-        tokens: ['MAYBE'],
-        sentence: 'I am uncertain, please explain the options.',
-        confidence: 0.92,
-        category: 'civic'
-      },
-      {
-        tokens: ['WRONG'],
-        sentence: 'This entry appears to be wrong, please rectify it.',
-        confidence: 0.95,
-        category: 'civic'
-      },
-
-      // --- ACTIONS & VERBS ---
-      {
-        tokens: ['CLEAN'],
-        sentence: 'Please clean and sanitize the counter area.',
-        confidence: 0.95,
-        category: 'actions'
-      },
-      {
-        tokens: ['CLOSE'],
-        sentence: 'I would like to close my account or finish this session.',
-        confidence: 0.95,
-        category: 'actions'
-      },
-      {
-        tokens: ['COME'],
-        sentence: 'Please step forward to the counter.',
-        confidence: 0.94,
-        category: 'actions'
-      },
-      {
-        tokens: ['COOK'],
-        sentence: 'Inquiring about food and cafeteria services.',
-        confidence: 0.92,
-        category: 'actions'
-      },
-      {
-        tokens: ['I', 'DRINK'],
-        sentence: 'I am thirsty, could I please have some drinking water?',
-        confidence: 0.97,
-        category: 'actions'
-      },
-      {
-        tokens: ['DRINK'],
-        sentence: 'I need drinking water, please.',
-        confidence: 0.95,
-        category: 'actions'
-      },
-      {
-        tokens: ['GIVE'],
-        sentence: 'Please give me the completed document or certificate.',
-        confidence: 0.95,
-        category: 'actions'
-      },
-      {
-        tokens: ['JUMP'],
-        sentence: 'Requesting priority fast-track queue assistance.',
-        confidence: 0.94,
-        category: 'actions'
-      },
-      {
-        tokens: ['POUR'],
-        sentence: 'Please dispense the liquid medication.',
-        confidence: 0.93,
-        category: 'actions'
-      },
-      {
-        tokens: ['SWITCH'],
-        sentence: 'I would like to switch service category or counter.',
-        confidence: 0.95,
-        category: 'actions'
-      },
-      {
-        tokens: ['BREAK'],
-        sentence: 'What time will the counter reopen after the break?',
-        confidence: 0.94,
-        category: 'actions'
-      },
-
-      // --- FOOD & COMMODITIES ---
-      {
-        tokens: ['TEA'],
-        sentence: 'Is tea or hot beverage available in the waiting lobby?',
-        confidence: 0.94,
-        category: 'food'
-      },
-      {
-        tokens: ['VEGETABLES'],
-        sentence: 'I am inquiring about public food distribution and ration cards.',
-        confidence: 0.95,
-        category: 'food'
-      },
-      {
-        tokens: ['LEMON'],
-        sentence: 'Agricultural commodity inquiry for lemon.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['ONION'],
-        sentence: 'Market commodity inquiry for onion.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['CARROT'],
-        sentence: 'Agricultural produce inquiry for carrot.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['CABBAGE'],
-        sentence: 'Agricultural produce inquiry for cabbage.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['CAULIFLOWER'],
-        sentence: 'Agricultural produce inquiry for cauliflower.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['CHILLI'],
-        sentence: 'Agricultural commodity inquiry for chilli.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['BRINJAL'],
-        sentence: 'Agricultural produce inquiry for brinjal / eggplant.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['CUCUMBER'],
-        sentence: 'Agricultural produce inquiry for cucumber.',
-        confidence: 0.90,
-        category: 'food'
-      },
-      {
-        tokens: ['RADISH'],
-        sentence: 'Agricultural produce inquiry for radish.',
-        confidence: 0.90,
-        category: 'food'
-      },
-
-      // --- ANIMALS & NATURE ---
-      {
-        tokens: ['LION'],
-        sentence: 'National emblem verification and department query.',
-        confidence: 0.92,
-        category: 'animals'
-      },
-      {
-        tokens: ['TIGER'],
-        sentence: 'Wildlife sanctuary entry permit for tiger reserve.',
-        confidence: 0.93,
-        category: 'animals'
-      },
-      {
-        tokens: ['ELEPHANT'],
-        sentence: 'Forest tourism safari booking for elephant reserve.',
-        confidence: 0.93,
-        category: 'animals'
-      },
-      {
-        tokens: ['BEAR'],
-        sentence: 'Wildlife sanctuary entry permit for bear park.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['DEER'],
-        sentence: 'Wildlife park safari pass for deer enclosure.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['GIRAFFE'],
-        sentence: 'Zoological park visit permit for giraffe exhibit.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['MONKEY'],
-        sentence: 'Wildlife department report regarding monkey observation.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['PEACOCK'],
-        sentence: 'Bird sanctuary permit for peacock reserve.',
-        confidence: 0.91,
-        category: 'animals'
-      },
-      {
-        tokens: ['PIGEON'],
-        sentence: 'Urban bird management and advisory query.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['SPARROW'],
-        sentence: 'Bird conservation project inquiry for sparrows.',
-        confidence: 0.90,
-        category: 'animals'
-      },
-      {
-        tokens: ['TURTLE'],
-        sentence: 'Aquatic wildlife sanctuary permit for turtle conservation.',
-        confidence: 0.91,
-        category: 'animals'
-      },
-      {
-        tokens: ['CROCODILE'],
-        sentence: 'River basin safety advisory regarding crocodile sanctuary.',
-        confidence: 0.91,
-        category: 'animals'
-      },
-      {
-        tokens: ['VOLCANO'],
-        sentence: 'Natural disaster alert and emergency rescue assistance.',
-        confidence: 0.96,
-        category: 'animals'
-      },
-
-      // --- COURTESIES & ASSISTANCE ---
       {
         tokens: ['DEAF_ASSIST'],
         sentence: 'I am Deaf. Please use text or visual sign prompts on the screen.',
@@ -567,16 +450,16 @@ export class SentenceFormer {
     if (!token) return;
     const cleanToken = token.toUpperCase().replace(/\s+/g, '_');
 
-    // Avoid immediate duplicate token repetition within 1.5s
+    // Avoid immediate duplicate token repetition within 1.2s
     const now = performance.now();
     const lastToken = this.tokenBuffer[this.tokenBuffer.length - 1];
-    if (lastToken && lastToken.token === cleanToken && (now - this.lastTokenTimestamp) < 1800) {
+    if (lastToken && lastToken.token === cleanToken && (now - this.lastTokenTimestamp) < 1200) {
       return;
     }
 
     this.tokenBuffer.push({
       token: cleanToken,
-      spokenText: spokenText || token,
+      spokenText: spokenText || token.replace(/_/g, ' '),
       timestamp: now
     });
 
@@ -590,7 +473,7 @@ export class SentenceFormer {
       this.onTokensUpdated(this.getTokens());
     }
 
-    // Debounce sentence formation
+    // Debounce sentence formation if autoCommit is on
     if (this.autoCommit) {
       if (this.commitDebounceTimer) clearTimeout(this.commitDebounceTimer);
       this.commitDebounceTimer = setTimeout(() => {
@@ -599,12 +482,35 @@ export class SentenceFormer {
     }
   }
 
+  /**
+   * Add an arbitrary fingerspelled word or text phrase directly into the sentence builder
+   */
+  addWord(wordText) {
+    if (!wordText || !wordText.trim()) return;
+    const cleanWord = wordText.trim();
+    this.addToken(cleanWord, cleanWord);
+  }
+
   getTokens() {
     return this.tokenBuffer.map(t => ({
       id: t.token,
-      label: t.spokenText || t.token,
+      label: t.spokenText || t.token.replace(/_/g, ' '),
       timestamp: t.timestamp
     }));
+  }
+
+  hasTokens() {
+    return this.tokenBuffer.length > 0;
+  }
+
+  moveToken(fromIndex, toIndex) {
+    if (fromIndex < 0 || fromIndex >= this.tokenBuffer.length) return;
+    if (toIndex < 0 || toIndex >= this.tokenBuffer.length) return;
+    const item = this.tokenBuffer.splice(fromIndex, 1)[0];
+    this.tokenBuffer.splice(toIndex, 0, item);
+    if (this.onTokensUpdated) {
+      this.onTokensUpdated(this.getTokens());
+    }
   }
 
   removeToken(index) {
@@ -636,22 +542,27 @@ export class SentenceFormer {
     return this.formSentence();
   }
 
+  getSentenceHistory() {
+    return [...this.sentenceHistory];
+  }
+
   /**
    * Synthesize tokens into a grammatically fluent sentence
    */
   formSentence() {
     if (this.tokenBuffer.length === 0) return null;
 
-    const tokenList = this.tokenBuffer.map(t => t.token);
+    const tokenList = this.tokenBuffer.map(t => this._normalizeToken(t.token));
     let matchedRule = null;
 
     // 1. Search for multi-token rules matching the current sequence or suffix
     for (let len = tokenList.length; len >= 1; len--) {
       const subTokens = tokenList.slice(-len);
-      const rule = this.grammarRules.find(r => 
-        r.tokens.length === subTokens.length &&
-        r.tokens.every((tok, idx) => tok === subTokens[idx])
-      );
+      const rule = this.grammarRules.find(r => {
+        const normRuleTokens = r.tokens.map(tok => this._normalizeToken(tok));
+        return normRuleTokens.length === subTokens.length &&
+          normRuleTokens.every((tok, idx) => tok === subTokens[idx]);
+      });
 
       if (rule) {
         matchedRule = rule;
@@ -669,7 +580,7 @@ export class SentenceFormer {
       category = matchedRule.category;
     } else {
       // Fallback natural sentence synthesizer
-      const words = this.tokenBuffer.map(t => t.spokenText || t.token);
+      const words = this.tokenBuffer.map(t => t.spokenText || t.token.replace(/_/g, ' '));
       sentence = this._naturalFallback(words);
     }
 
@@ -680,6 +591,12 @@ export class SentenceFormer {
       category: category,
       timestamp: new Date().toLocaleTimeString()
     };
+
+    // Save to history
+    this.sentenceHistory.unshift({ ...result, id: Date.now() });
+    if (this.sentenceHistory.length > 20) {
+      this.sentenceHistory.pop();
+    }
 
     if (this.onSentenceFormed) {
       this.onSentenceFormed(result);
@@ -692,9 +609,12 @@ export class SentenceFormer {
 
   _naturalFallback(words) {
     if (words.length === 1) {
-      return `${words[0]}.`;
+      const w = words[0].trim();
+      return w.endsWith('.') || w.endsWith('?') || w.endsWith('!') ? w : `${w}.`;
     }
     const joined = words.join(' ');
-    return joined.charAt(0).toUpperCase() + joined.slice(1) + '.';
+    const formatted = joined.charAt(0).toUpperCase() + joined.slice(1);
+    return formatted.endsWith('.') || formatted.endsWith('?') || formatted.endsWith('!') ? formatted : `${formatted}.`;
   }
 }
+

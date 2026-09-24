@@ -264,13 +264,36 @@ class App {
   }
 
   updateComposerDisplay() {
-    if (!this.spelledTextEl) return;
-    if (this.composedWord.length > 0) {
-      this.spelledTextEl.textContent = this.composedWord;
-      this.spelledTextEl.classList.remove('spelled-text-placeholder');
-    } else {
-      this.spelledTextEl.textContent = 'Fingerspell letters (A-Z) to build words here...';
-      this.spelledTextEl.classList.add('spelled-text-placeholder');
+    if (this.spelledTextEl) {
+      if (this.composedWord.length > 0) {
+        this.spelledTextEl.textContent = this.composedWord;
+        this.spelledTextEl.classList.remove('spelled-text-placeholder');
+      } else {
+        this.spelledTextEl.textContent = 'Fingerspell letters (A-Z) to build words here...';
+        this.spelledTextEl.classList.add('spelled-text-placeholder');
+      }
+    }
+
+    // Update Dedicated Studio Word Staging Display
+    const studioTilesEl = document.getElementById('studio-spelled-tiles');
+    const studioRawEl = document.getElementById('studio-spelled-raw-text');
+    if (studioTilesEl && studioRawEl) {
+      if (this.composedWord.length > 0) {
+        const letters = Array.from(this.composedWord);
+        studioTilesEl.innerHTML = letters.map((char, i) => {
+          if (char === ' ') {
+            return `<span class="spelled-letter-tile space-tile" title="Space">␣</span>`;
+          }
+          const isLatest = (i === letters.length - 1);
+          return `<span class="spelled-letter-tile ${isLatest ? 'pop-in' : ''}">${char}</span>`;
+        }).join('');
+        studioRawEl.textContent = `Word: "${this.composedWord}" (${letters.length} chars)`;
+        studioRawEl.classList.remove('spelled-raw-placeholder');
+      } else {
+        studioTilesEl.innerHTML = '';
+        studioRawEl.textContent = 'Hold hand in camera to fingerspell letters...';
+        studioRawEl.classList.add('spelled-raw-placeholder');
+      }
     }
   }
 
@@ -291,18 +314,22 @@ class App {
     const confBarEl = document.getElementById('confidence-bar');
     const topListEl = document.getElementById('top-predictions-list');
     const fingerDots = document.getElementById('finger-indicators');
+    const studioSignBadge = document.getElementById('studio-active-sign-badge');
 
     if (bestMatch && confidence > 35) {
       const isLetter = bestMatch.category === 'asl_alphabet' || Boolean(bestMatch.letter);
-      if (nameEl) nameEl.textContent = isLetter ? `ASL Letter "${bestMatch.letter || bestMatch.spokenText}"` : `${bestMatch.name} (${bestMatch.category.toUpperCase()})`;
+      const signLabel = isLetter ? `ASL Letter "${bestMatch.letter || bestMatch.spokenText}"` : `${bestMatch.name} (${bestMatch.category.toUpperCase()})`;
+      if (nameEl) nameEl.textContent = signLabel;
       if (spokenEl) spokenEl.textContent = `"${bestMatch.spokenText}"`;
       if (confValEl) confValEl.textContent = `${confidence}%`;
       if (confBarEl) confBarEl.style.width = `${confidence}%`;
+      if (studioSignBadge) studioSignBadge.textContent = `${signLabel} (${confidence}%)`;
     } else {
       if (nameEl) nameEl.textContent = 'Scanning for Gestures or ASL Letters...';
       if (spokenEl) spokenEl.textContent = '"Hold your hand in camera view to sign phrases or fingerspell."';
       if (confValEl) confValEl.textContent = '0%';
       if (confBarEl) confBarEl.style.width = '0%';
+      if (studioSignBadge) studioSignBadge.textContent = 'Fingerspell or Sign';
     }
 
     if (topListEl) {
@@ -821,6 +848,7 @@ class App {
       pill.addEventListener('click', (e) => {
         const lang = e.currentTarget.dataset.lang;
         document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.studio-lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
         e.currentTarget.classList.add('active');
         this.translator.setTargetLanguage(lang);
         if (this.lastFormedSentence) {
@@ -834,6 +862,162 @@ class App {
       this.speakTranslatedSentence();
     });
 
+    // =========================================================================
+    // VIEW SWITCHER & GESTURE-TO-SENTENCE STUDIO CONTROLS
+    // =========================================================================
+    document.getElementById('tab-btn-counter')?.addEventListener('click', () => {
+      this.switchView('counter');
+    });
+
+    document.getElementById('tab-btn-studio')?.addEventListener('click', () => {
+      this.switchView('studio');
+    });
+
+    // Studio Camera Sync Toggle
+    document.getElementById('btn-studio-camera-sync')?.addEventListener('click', () => {
+      document.getElementById('btn-camera-toggle')?.click();
+      this.syncCameraButtons();
+    });
+
+    // Studio Push Word to Sentence Chain
+    document.getElementById('btn-studio-push-word')?.addEventListener('click', () => {
+      if (this.composedWord && this.composedWord.trim().length > 0) {
+        this.sentenceFormer.addWord(this.composedWord.trim());
+        this.composedWord = '';
+        this.updateComposerDisplay();
+        this.showGestureToast('✓ Word Pushed to Sentence Chain', '#10b981');
+      } else {
+        this.showGestureToast('⚠️ Fingerspell or choose a word first', '#f59e0b');
+      }
+    });
+
+    // Studio Word Deck Controls
+    document.getElementById('btn-studio-space')?.addEventListener('click', () => {
+      this.composedWord += ' ';
+      this.updateComposerDisplay();
+    });
+
+    document.getElementById('btn-studio-backspace')?.addEventListener('click', () => {
+      this.composedWord = this.composedWord.slice(0, -1);
+      this.updateComposerDisplay();
+    });
+
+    document.getElementById('btn-studio-clear-word')?.addEventListener('click', () => {
+      this.composedWord = '';
+      this.updateComposerDisplay();
+    });
+
+    document.getElementById('btn-studio-speak-word')?.addEventListener('click', () => {
+      if (this.composedWord.trim().length > 0) {
+        this.tts.speak(this.composedWord.trim(), true);
+      }
+    });
+
+    // Studio One-Click Concept Palette Chips
+    document.querySelectorAll('.btn-palette-chip').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const word = e.currentTarget.dataset.word;
+        if (word) {
+          this.sentenceFormer.addToken(word);
+          this.showGestureToast(`+ Added Word: [${word}]`, '#38bdf8');
+        }
+      });
+    });
+
+    // Studio Custom Word Insert
+    const customWordInput = document.getElementById('input-studio-custom-word');
+    const customWordBtn = document.getElementById('btn-studio-add-custom-word');
+    const handleInsertCustomWord = () => {
+      if (!customWordInput) return;
+      const text = customWordInput.value.trim();
+      if (!text) return;
+      this.sentenceFormer.addWord(text);
+      customWordInput.value = '';
+      this.showGestureToast(`+ Inserted: "${text}"`, '#10b981');
+    };
+
+    if (customWordBtn) customWordBtn.addEventListener('click', handleInsertCustomWord);
+    if (customWordInput) {
+      customWordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleInsertCustomWord();
+      });
+    }
+
+    // Studio Chain Controls
+    document.getElementById('btn-studio-clear-chain')?.addEventListener('click', () => {
+      this.sentenceFormer.clear();
+      this.showGestureToast('Chain Cleared', '#f43f5e');
+    });
+
+    document.getElementById('btn-studio-synthesize')?.addEventListener('click', () => {
+      const res = this.sentenceFormer.forceCommit();
+      if (res) {
+        this.showGestureToast('✨ Sentence Synthesized!', '#a855f7');
+      } else {
+        this.showGestureToast('⚠️ Stage words in sequence first', '#f59e0b');
+      }
+    });
+
+    document.getElementById('studio-toggle-auto')?.addEventListener('change', (e) => {
+      this.sentenceFormer.setAutoCommit(e.target.checked);
+      const deskToggle = document.getElementById('toggle-auto-sentence');
+      if (deskToggle) deskToggle.checked = e.target.checked;
+    });
+
+    // Studio Copy Sentence
+    document.getElementById('btn-studio-copy-sentence')?.addEventListener('click', () => {
+      if (this.lastFormedSentence) {
+        navigator.clipboard?.writeText(this.lastFormedSentence);
+        this.showGestureToast('📋 Sentence Copied to Clipboard', '#38bdf8');
+      }
+    });
+
+    // Studio Send to Counter Dialogue
+    document.getElementById('btn-studio-send-dialogue')?.addEventListener('click', () => {
+      if (this.lastFormedSentence) {
+        const targetLang = this.translator.getCurrentLanguage();
+        const translated = this.lastTranslatedResult || this.translator.translate(this.lastFormedSentence);
+        this.transcript.addEntry({
+          speaker: 'Customer (Studio)',
+          text: translated.translatedText || this.lastFormedSentence,
+          originalText: this.lastFormedSentence,
+          langName: targetLang.name,
+          signId: 'Gesture Studio',
+          confidence: 98
+        });
+        const countEl = document.getElementById('transcript-count');
+        if (countEl) countEl.textContent = `${this.transcript.getEntries().length} turns`;
+        this.showGestureToast('💬 Sent to Service Desk Dialogue!', '#10b981');
+      }
+    });
+
+    // Studio Language Selector Pills
+    document.querySelectorAll('.studio-lang-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        const lang = e.currentTarget.dataset.lang;
+        document.querySelectorAll('.studio-lang-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
+        e.currentTarget.classList.add('active');
+        this.translator.setTargetLanguage(lang);
+        if (this.lastFormedSentence) {
+          this.updateTranslationUI(this.lastFormedSentence, false);
+        }
+      });
+    });
+
+    // Studio Speak Translation
+    document.getElementById('btn-studio-speak-translation')?.addEventListener('click', () => {
+      this.speakTranslatedSentence();
+    });
+
+    // Studio Clear History
+    document.getElementById('btn-studio-clear-history')?.addEventListener('click', () => {
+      const historyList = document.getElementById('studio-history-list');
+      if (historyList) {
+        historyList.innerHTML = '<span class="history-placeholder">No recent sentences in history.</span>';
+      }
+    });
+
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -841,11 +1025,138 @@ class App {
       if (e.code === 'Space') {
         e.preventDefault();
         document.getElementById('btn-camera-toggle')?.click();
+        this.syncCameraButtons();
       } else if (e.key === 'm' || e.key === 'M') {
         document.getElementById('btn-staff-mic')?.click();
       } else if (e.key === 'd' || e.key === 'D') {
         document.getElementById('btn-run-simulation')?.click();
       }
+    });
+  }
+
+  /* ==========================================================================
+     VIEW SWITCHER & STUDIO METHODS
+     ========================================================================== */
+
+  switchView(viewName) {
+    const counterTab = document.getElementById('tab-btn-counter');
+    const studioTab = document.getElementById('tab-btn-studio');
+    const counterView = document.getElementById('view-counter-desk');
+    const studioView = document.getElementById('view-sentence-studio');
+
+    if (viewName === 'studio') {
+      counterTab?.classList.remove('active');
+      studioTab?.classList.add('active');
+      if (counterView) {
+        counterView.classList.remove('active');
+        counterView.style.display = 'none';
+      }
+      if (studioView) {
+        studioView.classList.add('active');
+        studioView.style.display = 'block';
+      }
+      this.renderStudioWordChain(this.sentenceFormer.getTokens());
+      this.renderStudioHistory();
+    } else {
+      studioTab?.classList.remove('active');
+      counterTab?.classList.add('active');
+      if (studioView) {
+        studioView.classList.remove('active');
+        studioView.style.display = 'none';
+      }
+      if (counterView) {
+        counterView.classList.add('active');
+        counterView.style.display = 'block';
+      }
+    }
+    this.syncCameraButtons();
+  }
+
+  syncCameraButtons() {
+    const isActive = this.handDetector.isCameraActive;
+    const deskBtn = document.getElementById('btn-camera-toggle');
+    const deskText = document.getElementById('camera-btn-text');
+    const studioText = document.getElementById('studio-camera-btn-text');
+    const studioBtn = document.getElementById('btn-studio-camera-sync');
+
+    if (deskBtn) deskBtn.classList.toggle('active', isActive);
+    if (deskText) deskText.textContent = isActive ? 'Stop Camera' : 'Start Camera';
+    if (studioBtn) studioBtn.classList.toggle('active', isActive);
+    if (studioText) studioText.textContent = isActive ? 'Camera Active (Stop)' : 'Camera Off (Start)';
+  }
+
+  renderStudioWordChain(tokens) {
+    const chainContainer = document.getElementById('studio-word-chain');
+    const countEl = document.getElementById('studio-chain-count');
+    if (!chainContainer) return;
+
+    if (!tokens || tokens.length === 0) {
+      chainContainer.innerHTML = '<span class="chain-placeholder">No words in chain yet. Fingerspell words or click word chips on the left to start building sentences...</span>';
+      if (countEl) countEl.textContent = '0 words';
+      return;
+    }
+
+    if (countEl) countEl.textContent = `${tokens.length} word${tokens.length === 1 ? '' : 's'}`;
+
+    chainContainer.innerHTML = tokens.map((t, idx) => `
+      <div class="word-chain-chip ${idx === tokens.length - 1 ? 'newly-added' : ''}" data-idx="${idx}">
+        <span class="chain-chip-index">${idx + 1}</span>
+        <span class="chain-chip-label">${t.label || t.id}</span>
+        <div class="chain-chip-actions">
+          ${idx > 0 ? `<button class="btn-chain-move" data-move="left" data-idx="${idx}" title="Move Left">◀</button>` : ''}
+          ${idx < tokens.length - 1 ? `<button class="btn-chain-move" data-move="right" data-idx="${idx}" title="Move Right">▶</button>` : ''}
+          <button class="btn-chain-del" data-idx="${idx}" title="Remove Word">✖</button>
+        </div>
+      </div>
+      ${idx < tokens.length - 1 ? `<span class="chain-arrow">➔</span>` : ''}
+    `).join('');
+
+    // Bind chain actions
+    chainContainer.querySelectorAll('.btn-chain-move').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(e.currentTarget.dataset.idx, 10);
+        const dir = e.currentTarget.dataset.move;
+        const targetIdx = dir === 'left' ? idx - 1 : idx + 1;
+        this.sentenceFormer.moveToken(idx, targetIdx);
+      });
+    });
+
+    chainContainer.querySelectorAll('.btn-chain-del').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(e.currentTarget.dataset.idx, 10);
+        this.sentenceFormer.removeToken(idx);
+      });
+    });
+  }
+
+  renderStudioHistory() {
+    const listEl = document.getElementById('studio-history-list');
+    if (!listEl) return;
+
+    const history = this.sentenceFormer.getSentenceHistory();
+    if (!history || history.length === 0) {
+      listEl.innerHTML = '<span class="history-placeholder">No recent formed sentences in history.</span>';
+      return;
+    }
+
+    listEl.innerHTML = history.slice(0, 8).map(item => `
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-time">${item.timestamp}</span>
+          <span class="history-cat">${(item.category || 'General').toUpperCase()} (${item.confidence}%)</span>
+        </div>
+        <p class="history-text">"${item.sentence}"</p>
+        <button class="btn-history-play" data-text="${item.sentence}" title="Speak aloud with Voice TTS">🔊 Speak</button>
+      </div>
+    `).join('');
+
+    listEl.querySelectorAll('.btn-history-play').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const text = e.currentTarget.dataset.text;
+        if (text) this.tts.speak(text, true);
+      });
     });
   }
 
@@ -874,28 +1185,30 @@ class App {
 
   renderTokenChips(tokens) {
     const container = document.getElementById('token-chips-container');
-    if (!container) return;
+    if (container) {
+      if (!tokens || tokens.length === 0) {
+        container.innerHTML = '<span class="token-chip-placeholder">Recognized gesture signs will buffer here (e.g. [I] + [FEVER])...</span>';
+      } else {
+        container.innerHTML = tokens.map((t, idx) => `
+          <span class="token-chip ${idx === tokens.length - 1 ? 'newly-added' : ''}">
+            <span class="token-chip-text">${t.label || t.id}</span>
+            <button class="token-chip-delete" data-token-idx="${idx}" title="Remove token">&times;</button>
+          </span>
+        `).join('');
 
-    if (!tokens || tokens.length === 0) {
-      container.innerHTML = '<span class="token-chip-placeholder">Recognized gesture signs will buffer here (e.g. [I] + [FEVER])...</span>';
-      return;
+        // Bind delete clicks
+        container.querySelectorAll('.token-chip-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(e.currentTarget.dataset.tokenIdx, 10);
+            this.sentenceFormer.removeToken(index);
+          });
+        });
+      }
     }
 
-    container.innerHTML = tokens.map((t, idx) => `
-      <span class="token-chip ${idx === tokens.length - 1 ? 'newly-added' : ''}">
-        <span class="token-chip-text">${t.label || t.id}</span>
-        <button class="token-chip-delete" data-token-idx="${idx}" title="Remove token">&times;</button>
-      </span>
-    `).join('');
-
-    // Bind delete clicks
-    container.querySelectorAll('.token-chip-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const index = parseInt(e.currentTarget.dataset.tokenIdx, 10);
-        this.sentenceFormer.removeToken(index);
-      });
-    });
+    // Also update Studio Word Chain Canvas
+    this.renderStudioWordChain(tokens);
   }
 
   handleSentenceFormed(result) {
@@ -904,12 +1217,24 @@ class App {
 
     this.highlightPipelineStage(2);
 
+    // Update Counter Desk Stage 2
     const sentenceEl = document.getElementById('formed-sentence-text');
     const badgeEl = document.getElementById('grammar-confidence-badge');
     if (sentenceEl) sentenceEl.textContent = `"${sentence}"`;
     if (badgeEl) {
       badgeEl.textContent = `${Math.round(confidence)}% Match (${category ? category.toUpperCase() : 'GRAMMAR'})`;
     }
+
+    // Update Studio Formed Sentence Card
+    const studioSentenceEl = document.getElementById('studio-formed-sentence-text');
+    const studioConfidenceEl = document.getElementById('studio-grammar-confidence');
+    if (studioSentenceEl) studioSentenceEl.textContent = `"${sentence}"`;
+    if (studioConfidenceEl) {
+      studioConfidenceEl.textContent = `${Math.round(confidence)}% Natural Synthesizer Match`;
+    }
+
+    // Render updated history
+    this.renderStudioHistory();
 
     // Pass formed English sentence to Stage 3 Multilingual Translation
     this.updateTranslationUI(sentence, true);
@@ -923,6 +1248,7 @@ class App {
     const translated = this.translator.translate(englishSentence);
     this.lastTranslatedResult = translated;
 
+    // Update Desk View Translation
     const targetLangLabel = document.getElementById('target-lang-label');
     const translatedTextEl = document.getElementById('translated-output-text');
     const speakLangName = document.getElementById('btn-speak-lang-name');
@@ -936,6 +1262,22 @@ class App {
     }
     if (speakLangName) {
       speakLangName.textContent = targetLang.name;
+    }
+
+    // Update Dedicated Studio Translation
+    const studioLangLabel = document.getElementById('studio-target-lang-label');
+    const studioTranslatedTextEl = document.getElementById('studio-translated-output-text');
+    const studioSpeakLangName = document.getElementById('studio-speak-lang-name');
+
+    if (studioLangLabel) {
+      studioLangLabel.textContent = `${targetLang.name} (${targetLang.native} • ${targetLang.langTag}):`;
+    }
+    if (studioTranslatedTextEl) {
+      studioTranslatedTextEl.textContent = `"${translated.translatedText}"`;
+      studioTranslatedTextEl.setAttribute('lang', targetLang.code);
+    }
+    if (studioSpeakLangName) {
+      studioSpeakLangName.textContent = targetLang.name;
     }
 
     // STAGE 4: Localized Voice Speech Output
