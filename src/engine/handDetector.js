@@ -148,11 +148,13 @@ export class HandDetector {
       this.activeVideoPath = videoUrl;
       if (signId) this.simulatedSignId = signId;
 
+      const cleanUrl = encodeURI(videoUrl);
       this.videoElement.srcObject = null;
-      this.videoElement.src = videoUrl;
+      this.videoElement.src = cleanUrl;
       this.videoElement.loop = true;
       this.videoElement.muted = true;
       this.videoElement.playsInline = true;
+      this.videoElement.load();
 
       await this.videoElement.play();
       this.isRunning = true;
@@ -160,7 +162,7 @@ export class HandDetector {
       return { success: true };
     } catch (err) {
       console.warn('Dataset video play note:', err);
-      // Fallback to synthetic sign animation
+      // Fallback to synthetic sign animation for uninterrupted evaluation
       if (signId) this.startSimulatedMode(signId);
       return { success: false, error: err.message };
     }

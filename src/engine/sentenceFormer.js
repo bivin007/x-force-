@@ -600,7 +600,24 @@ export class SentenceFormer {
   }
 
   getTokens() {
-    return this.tokenBuffer.map(t => t.token);
+    return this.tokenBuffer.map(t => ({
+      id: t.token,
+      label: t.spokenText || t.token,
+      timestamp: t.timestamp
+    }));
+  }
+
+  removeToken(index) {
+    if (index >= 0 && index < this.tokenBuffer.length) {
+      this.tokenBuffer.splice(index, 1);
+      if (this.onTokensUpdated) {
+        this.onTokensUpdated(this.getTokens());
+      }
+    }
+  }
+
+  clear() {
+    this.clearTokens();
   }
 
   clearTokens() {
@@ -609,6 +626,14 @@ export class SentenceFormer {
     if (this.onTokensUpdated) {
       this.onTokensUpdated([]);
     }
+  }
+
+  setAutoCommit(val) {
+    this.autoCommit = Boolean(val);
+  }
+
+  forceCommit() {
+    return this.formSentence();
   }
 
   /**
