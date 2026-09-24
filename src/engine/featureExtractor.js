@@ -68,8 +68,8 @@ export class FeatureExtractor {
    */
   _extractSingleHand(rawLandmarks, handLabel) {
     const normalized = normalizeLandmarks(rawLandmarks);
-    const aligned = alignHandOrientation(normalized);
-    const fingerStates = this._classifyFingers(rawLandmarks, normalized);
+    const aligned = alignHandOrientation(normalized, handLabel);
+    const fingerStates = this._classifyFingers(rawLandmarks, normalized, aligned);
     const angles = this._computeJointAngles(rawLandmarks);
     const distances = this._computeKeyDistances(normalized);
     const orientation = this._computeHandOrientation(rawLandmarks);
@@ -96,10 +96,10 @@ export class FeatureExtractor {
   /**
    * Classify each finger into OPEN, HALF, or FOLDED state
    */
-  _classifyFingers(raw, norm) {
+  _classifyFingers(raw, norm, aligned) {
     const wrist = raw[0];
 
-    // Helper to evaluate finger flexion
+    // Helper to evaluate 4 long fingers (Index, Middle, Ring, Pinky)
     const evaluateFinger = (mcpIdx, pipIdx, dipIdx, tipIdx) => {
       const pipAngle = angleBetweenPoints(raw[mcpIdx], raw[pipIdx], raw[dipIdx]);
       const dipAngle = angleBetweenPoints(raw[pipIdx], raw[dipIdx], raw[tipIdx]);
@@ -107,24 +107,43 @@ export class FeatureExtractor {
       const pipDistToWrist = distance(raw[pipIdx], wrist);
       const mcpDistToWrist = distance(raw[mcpIdx], wrist);
 
-      const isStraight = pipAngle > 145 && dipAngle > 140;
-      const isExtended = tipDistToWrist > pipDistToWrist * 1.08;
+      // In canonical aligned coordinates, an extended finger has tip much higher (-Y) than PIP
+      const isAlignedExtended = aligned && aligned[tipIdx].y < aligned[pipIdx].y - 0.18;
+      const isAlignedFolded = aligned && (aligned[tipIdx].y > aligned[pipIdx].y - 0.04 || distance(aligned[tipIdx], aligned[mcpIdx]) < 0.40);
 
-      if (isStraight && isExtended) return 'OPEN';
-      if (tipDistToWrist < mcpDistToWrist * 1.15 || pipAngle < 100) return 'FOLDED';
+      const isStraight = (pipAngle > 140 && dipAngle > 135) || isAlignedExtended;
+      const isExtended = tipDistToWrist > pipDistToWrist * 1.05 || isAlignedExtended;
+
+      if (isStraight && isExtended && !isAlignedFolded) return 'OPEN';
+      if (tipDistToWrist < mcpDistToWrist * 1.15 || pipAngle < 110 || isAlignedFolded) return 'FOLDED';
       return 'HALF';
     };
 
-    // Thumb evaluation (Thumb is unique due to lateral rotation)
+    // Thumb evaluation
     const thumbIpAngle = angleBetweenPoints(raw[LANDMARK.THUMB_MCP], raw[LANDMARK.THUMB_IP], raw[LANDMARK.THUMB_TIP]);
-    const thumbTipDistToPinkyMcp = distance(raw[LANDMARK.THUMB_TIP], raw[LANDMARK.PINKY_MCP]);
-    const thumbMcpDistToPinkyMcp = distance(raw[LANDMARK.THUMB_MCP], raw[LANDMARK.PINKY_MCP]);
+    const thumbTipDistToPinkyMcp = distance(norm[LANDMARK.THUMB_TIP], norm[LANDMARK.PINKY_MCP]);
+    const thumbTipDistToIndexMcp = distance(norm[LANDMARK.THUMB_TIP], norm[LANDMARK.INDEX_MCP]);
 
     let thumbState = 'FOLDED';
-    if (thumbIpAngle > 140 && thumbTipDistToPinkyMcp > thumbMcpDistToPinkyMcp * 1.15) {
-      thumbState = 'OPEN';
-    } else if (thumbTipDistToPinkyMcp > thumbMcpDistToPinkyMcp * 0.85) {
-      thumbState = 'HALF';
+    if (aligned) {
+      const thumbOut = Math.abs(aligned[LANDMARK.THUMB_TIP].x) > 0.42 || thumbTipDistToIndexMcp > 0.42;
+      const thumbIn = thumbTipDistToPinkyMcp < 0.38 || thumbTipDistToIndexMcp < 0.28;
+
+      if (thumbOut && thumbIpAngle > 130) {
+        thumbState = 'OPEN';
+      } else if (thumbIn || thumbIpAngle < 115) {
+        thumbState = 'FOLDED';
+      } else {
+        thumbState = 'HALF';
+      }
+    } else {
+      if (thumbIpAngle > 140 && thumbTipDistToPinkyMcp > 0.50) {
+        thumbState = 'OPEN';
+      } else if (thumbTipDistToPinkyMcp < 0.35) {
+        thumbState = 'FOLDED';
+      } else {
+        thumbState = 'HALF';
+      }
     }
 
     return {

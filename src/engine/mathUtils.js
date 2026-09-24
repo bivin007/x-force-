@@ -73,13 +73,10 @@ export function normalizeLandmarks(landmarks) {
  * Calculates hand rotation angles (roll, pitch, yaw) and rotates
  * the normalized landmarks so the palm always faces canonical front orientation.
  */
-export function alignHandOrientation(normalizedLandmarks) {
+export function alignHandOrientation(normalizedLandmarks, handLabel = 'Right') {
   if (!normalizedLandmarks || normalizedLandmarks.length < 21) return normalizedLandmarks;
 
-  const wrist = { x: 0, y: 0, z: 0 };
   const middleMcp = normalizedLandmarks[LANDMARK.MIDDLE_MCP];
-  const indexMcp = normalizedLandmarks[LANDMARK.INDEX_MCP];
-  const pinkyMcp = normalizedLandmarks[LANDMARK.PINKY_MCP];
 
   // Primary axis: Wrist to Middle MCP (Y direction in canonical frame)
   const angleY = Math.atan2(middleMcp.x, -middleMcp.y); // Rotation around Z axis (Roll)
@@ -87,11 +84,21 @@ export function alignHandOrientation(normalizedLandmarks) {
   const sinZ = Math.sin(-angleY);
 
   // Apply 2D roll compensation
-  return normalizedLandmarks.map(lm => ({
+  const aligned = normalizedLandmarks.map(lm => ({
     x: lm.x * cosZ - lm.y * sinZ,
     y: lm.x * sinZ + lm.y * cosZ,
-    z: lm.z
+    z: lm.z || 0
   }));
+
+  // Canonicalize handedness so Thumb is always on the -X side and Pinky on the +X side
+  const isLeft = handLabel === 'Left' || (aligned[LANDMARK.INDEX_MCP].x > aligned[LANDMARK.PINKY_MCP].x);
+  if (isLeft) {
+    aligned.forEach(lm => {
+      lm.x = -lm.x;
+    });
+  }
+
+  return aligned;
 }
 
 /**
